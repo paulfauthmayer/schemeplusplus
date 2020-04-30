@@ -88,15 +88,23 @@
                     (_+ a (_* a (PRED b))))))))
 
 (define (_/ a b)
-  (if (eq? a b)
-      _1
-      (if (eq? a _0)
-          (display "BOOM!")
-          (if (eq? b _0)
-              (display "BOOM!")
-              (display "something else")))))
+  (define (helper a b count)
+    (if (_= count _0) ; on first iteration, search for cases in which we can fast-lane the calculation
+        (if (eq? b _1)
+            a
+            (if (_= a b)
+                _1
+                (if (_< a b)
+                    _0
+                    (if (eq? b _0)
+                        (display "BOOM!")
+                        (helper (_- a b) b (SUCC count))))))
+        (if (_< a b)
+            c
+            (helper (_- a b) b (SUCC count)))))
 
-(_* _3 _4)
+  (helper a b _0))
+
 
 (define (_= a b)
   (if (eq? a _0)
