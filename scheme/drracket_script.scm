@@ -105,7 +105,32 @@
 	  #f
 	  (_= (PRED a) (PRED b)))))
 
+(define (_> a b)
+  ;Q: was ist hier besser: helper funktion mit counter -> nur erste iteration prüfen |vs| jede iteration prüfen ohne helper
+;  (if (eq? a b)
+;      #f
+;      (if (and (eq? a _0) (not (eq? b _0)))
+;          #f
+;          (if (and (eq? b _0) (not (eq? a _0)))
+;              #t
+;              (_> (PRED a) (PRED b)))))
+  (if (eq? b _0)
+      (not (eq? a _0))
+      (if (eq? a _0)
+          #f
+          (_> (PRED a) (PRED b)))))
 
+
+ (define (_< a b)
+   (_> b a))
+
+(define (_>= a b)
+  (if (_= a b)
+      #t
+      (_> a b)))
+
+(define (_<= a b)
+  (_>= b a))
 ; ------------------------------------------------------
 ; objekte vs. closures
 ;
