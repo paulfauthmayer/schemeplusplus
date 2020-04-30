@@ -81,9 +81,11 @@
 	_0
 	(if (eq? b _0)
 	    _0
-	    (if (eq? b _1)
-		a
-		(_+ a (_* a (PRED b)))))))
+            (if (eq? a _1)
+                b
+                (if (eq? b _1)
+                    a
+                    (_+ a (_* a (PRED b))))))))
 
 (define (_/ a b)
   (if (eq? a b)
