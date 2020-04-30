@@ -87,6 +87,15 @@
                     a
                     (_+ a (_* a (PRED b))))))))
 
+
+(define (_% a b)
+  (if (eq? b _0)
+      (display "BOOM!")
+      (if (_< a b)
+          a
+          (_% (_- a b) b))))
+
+
 (define (_/ a b)
   (define (helper a b count)
     (if (_= count _0) ; on first iteration, search for cases in which we can fast-lane the calculation
