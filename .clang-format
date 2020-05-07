@@ -1,0 +1,8 @@
+﻿---
+BasedOnStyle: Chromium
+BreakBeforeBraces: Stroustrup
+Language: Cpp
+SortIncludes: 'true'
+Standard: Cpp11
+
+...
