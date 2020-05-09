@@ -5,8 +5,8 @@
 O=o
 # windows executables have a ".exe" suffix / unix does not
 # change the following to "EXE=.exe" for ms-windows
-EXE=.exe
-CC="C:\Program Files\MINGW64\bin\gcc.exe"
+EXE=.out
+CC="gcc"
 
 #
 # change OBJS, HEADERS and TARGET as appropriate
