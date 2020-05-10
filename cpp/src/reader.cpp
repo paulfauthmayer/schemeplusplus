@@ -1,3 +1,4 @@
+#include "memory.hpp"
 #include "scheme.hpp"
 
 char skipWhitespaces()

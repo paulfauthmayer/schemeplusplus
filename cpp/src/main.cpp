@@ -1,4 +1,7 @@
 #include <iostream>
+#include "eval.hpp"
+#include "printer.hpp"
+#include "reader.hpp"
 #include "scheme.hpp"
 
 #define DEBUG
