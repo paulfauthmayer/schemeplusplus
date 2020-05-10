@@ -3,16 +3,20 @@
 #include "printer.hpp"
 #include "reader.hpp"
 #include "scheme.hpp"
+#include "selftest.hpp"
 
 #define DEBUG
 
 int main(int argc, char** argv)
 {
+  std::cout << "scheme:cpp version X.Y.Z\n";
+
 #ifdef DEBUG
   std::cout << argc << " arguments were passed\n";
   for (int i{0}; i < argc; i++) {
     std::cout << "arg" << i << ": " << argv[i] << '\n';
   }
+  selftest();
 #endif
 
   while (true) {

@@ -13,7 +13,7 @@ project(schemecpp VERSION 0.1.0)
 
 # link the files to be included
 add_executable(scheme src/main.cpp src/eval.cpp src/memory.cpp src/printer.cpp
-                      src/reader.cpp)
+                      src/reader.cpp src/selftest.cpp)
 
 # tell clang to use c++17 standard
 target_compile_features(scheme PRIVATE cxx_std_17)
