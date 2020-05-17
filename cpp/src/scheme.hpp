@@ -1,16 +1,23 @@
 #ifndef SCHEME_HPP
 #define SCHEME_HPP
+
 #include <iostream>
 
 enum scmObjectType {
-  SCM_INTEGER = 1,
-  SCM_STRING,
-  SCM_CONS,
-  SCM_NIL,
+  TAG_INTEGER = 1,
+  TAG_STRING,
+  TAG_CONS,
+  TAG_NIL,
+  TAG_SYMBOL,
+  TAG_TRUE,
+  TAG_FALSE,
+  TAG_ENVIRONMENT,
 };
 
+typedef enum scmObjectType scmTag;
+
 struct scmObjectStruct {
-  enum scmObjectType tag;
+  scmTag tag;
   union {
     int intValue;
     char* stringValue;
@@ -18,4 +25,5 @@ struct scmObjectStruct {
 };
 
 typedef struct scmObjectStruct* scmObject;
+
 #endif

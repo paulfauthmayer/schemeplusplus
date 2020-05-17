@@ -22,10 +22,10 @@ void selftest()
   assert(false, "this should report a failure");
 
   obj = scm_newInteger(0);
-  assert(obj->tag == SCM_INTEGER, "wrong tag");
+  assert(obj->tag == TAG_INTEGER, "wrong tag");
   assert(obj->u.intValue == 0, "wrong intVal (expected: 0)");
 
   obj = scm_newInteger(-5);
-  assert(obj->tag == SCM_INTEGER, "wrong_tag");
+  assert(obj->tag == TAG_INTEGER, "wrong_tag");
   assert(obj->u.intValue == -5, "wrong intVal (exprected: -5)");
 }
