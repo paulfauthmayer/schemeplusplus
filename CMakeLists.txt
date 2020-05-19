@@ -19,7 +19,7 @@ add_executable(scheme src/main.cpp src/eval.cpp src/memory.cpp src/printer.cpp
 target_compile_features(scheme PRIVATE cxx_std_17)
 
 # include header directories
-target_include_directories(scheme PUBLIC src)
+target_include_directories(scheme PUBLIC src include)
 
 # set warning levels for compilation this is different for windows machines
 if(MSVC)
