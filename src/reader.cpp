@@ -32,23 +32,25 @@ static scmObject scm_readNumber(char firstChar)
 
 static scmObject scm_readString()
 {
+  // strings are faster in most compilers than char arrays, so should we change
+  // this again?
   char nextChar;
-  // TODO: test whether this is slower han gittinger's solution
-  std::string stringBuffer;
+  int count{0};
+  int bufferSize{64};
+  char* stringBuffer = static_cast<char*>(malloc(bufferSize));
 
   nextChar = getchar();
   while (nextChar != '"') {
-    stringBuffer.push_back(nextChar);
+    stringBuffer[count++] = nextChar;
     nextChar = getchar();
   }
 
-  stringBuffer.push_back('\0');
-  // TODO: remove endl, this is only used because this wouldn't print anything
-  // otherwise
+  // TODO: is this necessary for cpp strings?
+  stringBuffer[count++] = '\0';
+
   std::cout << "read string \"" << stringBuffer << "\"" << std::endl;
 
-  // TODO: this should return a scmObject in the future --> implement in eval
-  return NULL;
+  return scm_newString(static_cast<char*>(realloc(stringBuffer, count)));
 }
 
 scmObject scm_read()
