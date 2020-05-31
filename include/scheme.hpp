@@ -3,6 +3,13 @@
 
 #include <iostream>
 
+struct scmInputStreamStruct {
+  FILE* stream;
+  char peekChar;
+};
+
+typedef struct scmInputStreamStruct* scmInputStream;
+
 enum scmObjectType {
   TAG_INTEGER = 1,
   TAG_STRING,

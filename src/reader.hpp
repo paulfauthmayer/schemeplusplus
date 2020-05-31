@@ -2,5 +2,5 @@
 #define READER_HPP
 #include "scheme.hpp"
 
-scmObject scm_read();
+scmObject scm_read(scmInputStream);
 #endif
