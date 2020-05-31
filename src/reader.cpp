@@ -1,13 +1,18 @@
 #include "memory.hpp"
 #include "scheme.hpp"
 
+static bool isWhiteSpace(char ch)
+{
+  return ((ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n'));
+}
+
 char skipWhitespaces()
 {
   char ch;
   // skip all whitespace characters
   do {
     ch = getchar();
-  } while ((ch == ' ') or (ch == '\t') or (ch == '\n') or (ch == '\r'));
+  } while (isWhiteSpace(ch));
 
   return ch;
 }
@@ -74,6 +79,10 @@ static scmObject scm_readString(scmInputStream in)
 
   nextChar = stream_next(in);
   while (nextChar != '"') {
+    if (count >= bufferSize) {
+      bufferSize *= 2;
+      stringBuffer = static_cast<char*>(realloc(stringBuffer, bufferSize));
+    }
     stringBuffer[count++] = nextChar;
     nextChar = getchar();
   }
