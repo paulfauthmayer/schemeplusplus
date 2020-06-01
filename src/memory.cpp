@@ -7,7 +7,7 @@ scmObject SCM_FALSE;
 scmObject scm_newSingleton(scmTag tag)
 {
   scmObject p = (scmObject)malloc(sizeof(struct scmObjectStruct));
-  p->tag = TAG_INTEGER;
+  p->tag = tag;
 
   return p;
 }
