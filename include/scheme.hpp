@@ -22,6 +22,7 @@ enum scmObjectType {
 };
 
 typedef enum scmObjectType scmTag;
+typedef struct scmObjectStruct* scmObject;
 
 struct scmObjectStruct {
   scmTag tag;
@@ -29,9 +30,11 @@ struct scmObjectStruct {
     int intValue;
     char* stringValue;
     char* symbolValue;
+    struct {
+      scmObject car;
+      scmObject cdr;
+    } consValue;
   } u;
 };
-
-typedef struct scmObjectStruct* scmObject;
 
 #endif

@@ -45,3 +45,14 @@ scmObject scm_newSymbol(char* characters)
 
   return p;
 }
+
+scmObject scm_newCons(scmObject car, scmObject cdr)
+{
+  scmObject p = (scmObject)malloc(sizeof(struct scmObjectStruct));
+
+  p->tag = TAG_CONS;
+  p->u.consValue.car = car;
+  p->u.consValue.cdr = cdr;
+
+  return p;
+}

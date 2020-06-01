@@ -3,4 +3,5 @@
 #include "scheme.hpp"
 
 scmObject scm_read(scmInputStream);
+extern void scm_printList(scmObject list);
 #endif

@@ -1,8 +1,22 @@
+#include "printer.hpp"
+#include "memory.hpp"
 #include "scheme.hpp"
+
+static void scm_printList(scmObject list)
+{
+  scm_print(list->u.consValue.car);
+  if (list->u.consValue.cdr == SCM_NIL) {
+    std::cout << ')';
+    return;
+  }
+  else {
+    std::cout << ' ';
+    scm_printList(list->u.consValue.cdr);
+  }
+}
 
 void scm_print(scmObject object)
 {
-  std::cout << "print tag: " << object->tag << '\n';
   switch (object->tag) {
     case TAG_INTEGER:
       std::cout << object->u.intValue;
@@ -21,6 +35,10 @@ void scm_print(scmObject object)
       break;
     case TAG_FALSE:
       std::cout << "#f";
+      break;
+    case TAG_CONS:
+      std::cout << '(';
+      scm_printList(object);
       break;
     default:
       std::cout << "not yet implemented: " << object->tag;

@@ -57,12 +57,16 @@ static scmObject scm_readNumber(scmInputStream in, char firstChar)
   int iVal{firstChar - '0'};
 
   nextChar = stream_next(in);
-  std::cout << "next digit: " << nextChar << '\n';
+
   while (isDigit(nextChar)) {
-    std::cout << nextChar << '\n';
+    std::cout << "next digit: " << nextChar << '\n';
     iVal = (iVal * 10) + (nextChar - '0');
     nextChar = stream_next(in);
   }
+
+  // unread the last read char because it's important in some cases
+  // such as closing parantheses
+  stream_unread(in, nextChar);
 
   return scm_newInteger(iVal);
 }
@@ -110,8 +114,12 @@ static scmObject scm_readSymbol(scmInputStream in)
       stringBuffer = static_cast<char*>(realloc(stringBuffer, bufferSize));
     }
     stringBuffer[count++] = nextChar;
-    nextChar = getchar();
+    nextChar = stream_next(in);
   }
+
+  // unread the last read char because it's important in some cases
+  // such as closing parantheses
+  stream_unread(in, nextChar);
 
   // TODO: is this necessary for cpp strings?
   stringBuffer[count++] = '\0';
@@ -123,7 +131,7 @@ static scmObject scm_readSymbol(scmInputStream in)
     return SCM_FALSE;
   }
 
-  std::cout << "read string \"" << stringBuffer << "\"" << std::endl;
+  std::cout << "read symbol <" << stringBuffer << ">" << std::endl;
 
   return scm_newSymbol(static_cast<char*>(realloc(stringBuffer, count)));
 }
@@ -141,13 +149,12 @@ static scmObject scm_readList(scmInputStream in)
   element = scm_read(in);
   restList = scm_readList(in);
 
-  return NULL;
+  return scm_newCons(element, restList);
 }
 
 scmObject scm_read(scmInputStream in)
 {
   char ch{skipWhitespaces(in)};
-  std::cout << "got " << ch << " encoded as " << static_cast<int>(ch) << ".\n";
 
   if (isDigit(ch)) {
     std::cout << "read digit\n";
