@@ -116,6 +116,13 @@ static scmObject scm_readSymbol(scmInputStream in)
   // TODO: is this necessary for cpp strings?
   stringBuffer[count++] = '\0';
 
+  if (strcmp(stringBuffer, "#t") == 0) {
+    return SCM_TRUE;
+  }
+  else if (strcmp(stringBuffer, "#f") == 0) {
+    return SCM_FALSE;
+  }
+
   std::cout << "read string \"" << stringBuffer << "\"" << std::endl;
 
   return scm_newSymbol(static_cast<char*>(realloc(stringBuffer, count)));
@@ -157,5 +164,4 @@ scmObject scm_read(scmInputStream in)
     stream_unread(in, ch);
     return scm_readSymbol(in);
   }
-  return NULL;
 }
