@@ -28,6 +28,7 @@ struct scmObjectStruct {
   union {
     int intValue;
     char* stringValue;
+    char* symbolValue;
   } u;
 };
 

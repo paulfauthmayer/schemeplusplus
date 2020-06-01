@@ -11,7 +11,7 @@ void scm_print(scmObject object)
       std::cout << '"' << object->u.stringValue << '"';
       break;
     case TAG_SYMBOL:
-      std::cout << object->u.stringValue;
+      std::cout << object->u.symbolValue;
       break;
     case TAG_NIL:
       std::cout << "()";

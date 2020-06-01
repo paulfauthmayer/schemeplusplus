@@ -41,7 +41,7 @@ scmObject scm_newSymbol(char* characters)
 {
   scmObject p = (scmObject)malloc(sizeof(struct scmObjectStruct));
   p->tag = TAG_SYMBOL;
-  p->u.stringValue = characters;
+  p->u.symbolValue = characters;
 
   return p;
 }
