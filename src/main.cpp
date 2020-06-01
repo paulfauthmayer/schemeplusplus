@@ -35,6 +35,7 @@ int main(int argc, char** argv)
 
   while (true) {
     // read and interpret the next expression
+    std::cout << "> ";
     scmObject expr{scm_read(SCM_STDIN)};
     std::cout << "read returned object with tag " << expr->tag << '\n';
     scmObject val{scm_eval(expr)};
