@@ -1,3 +1,4 @@
+#include "reader.hpp"
 #include "memory.hpp"
 #include "scheme.hpp"
 
@@ -6,25 +7,12 @@ static bool isWhiteSpace(char ch)
   return ((ch == ' ') || (ch == '\t') || (ch == '\r') || (ch == '\n'));
 }
 
-char skipWhitespaces()
-{
-  char ch;
-  // skip all whitespace characters
-  do {
-    ch = getchar();
-  } while (isWhiteSpace(ch));
-
-  return ch;
-}
-
 char stream_next(scmInputStream input)
 {
-  std::cout << "getting next character\n";
   char ch;
   int get_ch;
 
   ch = input->peekChar;
-  std::cout << "peak char: " << ch << '\n';
   if (ch != '\0') {
     input->peekChar = '\0';
     return ch;
@@ -36,6 +24,17 @@ char stream_next(scmInputStream input)
   }
 
   return get_ch;
+}
+
+char skipWhitespaces(scmInputStream in)
+{
+  char ch;
+  // skip all whitespace characters
+  do {
+    ch = stream_next(in);
+  } while (isWhiteSpace(ch));
+
+  return ch;
 }
 
 void stream_unread(scmInputStream input, char ch)
@@ -95,9 +94,52 @@ static scmObject scm_readString(scmInputStream in)
   return scm_newString(static_cast<char*>(realloc(stringBuffer, count)));
 }
 
+static scmObject scm_readSymbol(scmInputStream in)
+{
+  // strings are faster in most compilers than char arrays, so should we change
+  // this again?
+  char nextChar;
+  int count{0};
+  int bufferSize{64};
+  char* stringBuffer = static_cast<char*>(malloc(bufferSize));
+
+  nextChar = stream_next(in);
+  while (!isWhiteSpace(nextChar) && nextChar != '"' && nextChar != '(' && nextChar != ')') {
+    if (count >= bufferSize) {
+      bufferSize *= 2;
+      stringBuffer = static_cast<char*>(realloc(stringBuffer, bufferSize));
+    }
+    stringBuffer[count++] = nextChar;
+    nextChar = getchar();
+  }
+
+  // TODO: is this necessary for cpp strings?
+  stringBuffer[count++] = '\0';
+
+  std::cout << "read string \"" << stringBuffer << "\"" << std::endl;
+
+  return scm_newSymbol(static_cast<char*>(realloc(stringBuffer, count)));
+}
+
+static scmObject scm_readList(scmInputStream in)
+{
+  scmObject element, restList;
+
+  char ch{skipWhitespaces(in)};
+  if (ch == ')') {
+    return SCM_NIL;
+  }
+  stream_unread(in, ch);
+
+  element = scm_read(in);
+  restList = scm_readList(in);
+
+  return NULL;
+}
+
 scmObject scm_read(scmInputStream in)
 {
-  char ch{skipWhitespaces()};
+  char ch{skipWhitespaces(in)};
   std::cout << "got " << ch << " encoded as " << static_cast<int>(ch) << ".\n";
 
   if (isDigit(ch)) {
@@ -107,6 +149,13 @@ scmObject scm_read(scmInputStream in)
   else if (ch == '"') {
     std::cout << "reading string!" << std::endl;
     return scm_readString(in);
+  }
+  else if (ch == '(') {
+    return scm_readList(in);
+  }
+  else {
+    stream_unread(in, ch);
+    return scm_readSymbol(in);
   }
   return NULL;
 }
