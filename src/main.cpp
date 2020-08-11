@@ -11,9 +11,16 @@ int main(int argc, char** argv)
   initializeSingletons();
   std::cout << "scheme interpreter version " << 0.1 << '\n';
 
+  // start the REPL
+  scm::Object val;
   while (true) {
-    readInput();
+    // READ
+    InputVector input = readInput();
+    // EVALUATE
+    val;
+    // PRINT
   }
+  // LOOP!
 
   return 0;
 }
