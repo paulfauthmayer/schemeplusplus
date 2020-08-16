@@ -1,9 +1,9 @@
 #include "memory.hpp"
 #include "scheme.hpp"
 
-scm::Object SCM_NIL;
-scm::Object SCM_TRUE;
-scm::Object SCM_FALSE;
+scm::Object* SCM_NIL;
+scm::Object* SCM_TRUE;
+scm::Object* SCM_FALSE;
 
 void initializeSingletons()
 {
@@ -12,47 +12,36 @@ void initializeSingletons()
   SCM_FALSE = newSingleton(scm::TAG_FALSE);
 }
 
-scm::Object allocateScmObject()
+scm::Object* newSingleton(scm::ObjectTypeTag type)
 {
-  scm::Object obj = static_cast<scm::Object>(malloc(sizeof(struct scm::ObjectStruct)));
+  scm::Object* obj{new scm::Object(type)};
   return obj;
 }
 
-scm::Object newSingleton(scm::Tag tag)
+scm::Object* newInteger(int value)
 {
-  scm::Object obj = allocateScmObject();
-  obj->tag = tag;
+  scm::Object* obj{new scm::Object(scm::TAG_INT)};
+  obj->value = value;
   return obj;
 }
 
-scm::Object newInteger(int intValue)
+scm::Object* newFloat(double value)
 {
-  scm::Object obj = allocateScmObject();
-  obj->tag = scm::TAG_INT;
-  obj->u.intValue = intValue;
+  scm::Object* obj{new scm::Object(scm::TAG_FLOAT)};
+  obj->value = value;
   return obj;
 }
 
-scm::Object newFloat(double floatValue)
+scm::Object* newString(std::string value)
 {
-  scm::Object obj = allocateScmObject();
-  obj->tag = scm::TAG_FLOAT;
-  obj->u.floatValue = floatValue;
+  scm::Object* obj{new scm::Object(scm::TAG_STRING)};
+  obj->value = value;
   return obj;
 }
 
-scm::Object newString(std::string stringValue)
+scm::Object* newSybmol(std::string value)
 {
-  scm::Object obj = allocateScmObject();
-  obj->tag = scm::TAG_STRING;
-  obj->u.stringValue = stringValue;
-  return obj;
-}
-
-scm::Object newSybmol(std::string name)
-{
-  scm::Object obj{allocateScmObject()};
-  obj->tag = scm::TAG_SYMBOL;
-  obj->u.symbolValue = name;
+  scm::Object* obj{new scm::Object(scm::TAG_SYMBOL)};
+  obj->value = value;
   return obj;
 }

@@ -1,9 +1,10 @@
 #pragma once
 #include <iostream>
+#include <variant>
 
 namespace scm {
 
-enum ObjectType {
+enum ObjectTypeTag {
   TAG_INT = 1,
   TAG_FLOAT,
   TAG_STRING,
@@ -18,21 +19,17 @@ enum ObjectType {
   TAG_SYNTAX,
 };
 
-using Tag = enum ObjectType;
-using Object = struct ObjectStruct*;
+struct Object;
+struct consValue {
+  Object* car;
+  Object* cdr;
+};
 
-struct ObjectStruct {
-  Tag tag;
-  union {
-    int intValue;
-    double floatValue;
-    std::string stringValue;
-    std::string symbolValue;
-    struct {
-      Object car;
-      Object cdr;
-    } consValue;
-  } u;
+struct Object {
+  ObjectTypeTag tag;
+  std::variant<int, double, std::string, consValue> value;
+
+  Object(ObjectTypeTag tag) : tag(tag){};
 };
 
 }  // namespace scm
