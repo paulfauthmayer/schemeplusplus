@@ -79,7 +79,7 @@ void tokenizeLine(std::vector<std::string> lineVector, InputVector& tokens)
   }
 }
 
-bool canBeEvaluated(const InputVector& v)
+bool canBeEvaluated(const std::vector<std::string>& v)
 {
   /**
    * Check whether the input so far can be evaluated.
@@ -87,8 +87,9 @@ bool canBeEvaluated(const InputVector& v)
    * @param v Container of the currently detected tokens
    * @return boolean, is the input valid?
    */
-  int openParanthesesCount{};
-  int closeParanthesesCount{};
+  long openParanthesesCount{std::count(v.begin(), v.end(), "(")};
+  long closeParanthesesCount{std::count(v.begin(), v.end(), ")")};
+  std::cout << "[open: " << openParanthesesCount << ", close: " << closeParanthesesCount << "]\n";
   return openParanthesesCount == closeParanthesesCount;
 }
 
@@ -96,20 +97,20 @@ InputVector readInput()
 {
   // setup container to keep tokens
   InputVector v;
+  std::vector<std::string> elements;
   std::string line;
 
   // read symbols until we have an evaluatable expression
+  std::cout << "> ";
   do {
-    std::cout << "> ";
     std::getline(std::cin, line);
     std::cout << "read: " << line << '\n';
     // TODO: input stack!
-    std::vector split = splitLine(line);
-    for (auto s : split)
-      std::cout << "\t- " << s << "\n";
-    tokenizeLine(split, v);
-    std::cout << "successfully read line!\n";
-  } while (!canBeEvaluated(v));
+    std::vector<std::string> split = splitLine(line);
+    elements.insert(elements.end(), std::make_move_iterator(split.begin()), std::make_move_iterator(split.end()));
+  } while (!canBeEvaluated(elements));
 
+  tokenizeLine(elements, v);
+  std::cout << "successfully read expression!\n";
   return v;
 }
