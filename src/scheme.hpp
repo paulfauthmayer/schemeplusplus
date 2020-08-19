@@ -54,8 +54,8 @@ inline std::string toString(scm::Object* obj)
     case TAG_FLOAT:
       return std::to_string(std::get<double>(obj->value));
       break;
-    case TAG_SYMBOL:
-      return std::get<std::string>(obj->value);
+    case TAG_STRING:
+      return '"' + std::get<std::string>(obj->value) + '"';
       break;
     case TAG_NIL:
       return "()'";

@@ -68,7 +68,7 @@ scm::Object* interpretInput(std::vector<std::string>::iterator& current)
   if (isFloat(*current))
     return newFloat(stof(*current));
   else if (isString(*current))
-    return newString(*current);
+    return newString((*current).substr(1, (*current).length() - 2));
   else if (*current == "(")
     return interpretList(++current);
   else if (isSymbol(*current))
