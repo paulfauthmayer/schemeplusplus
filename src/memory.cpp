@@ -45,3 +45,10 @@ scm::Object* newSybmol(std::string value)
   obj->value = value;
   return obj;
 }
+
+scm::Object* newCons(scm::Object* car, scm::Object* cdr)
+{
+  scm::Object* obj{new scm::Object(scm::TAG_CONS)};
+  obj->value = scm::ConsValue{car, cdr};
+  return obj;
+}

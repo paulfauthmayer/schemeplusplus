@@ -8,6 +8,7 @@ scm::Object* newFloat(double value);
 scm::Object* newString(std::string value);
 scm::Object* newEnv();
 scm::Object* newSybmol(std::string value);
+scm::Object* newCons(scm::Object* car, scm::Object* cdr);
 
 extern scm::Object* SCM_NIL;
 extern scm::Object* SCM_TRUE;
