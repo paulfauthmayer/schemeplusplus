@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include "evaluate.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
 #include "scheme.hpp"
@@ -20,9 +21,9 @@ int main(int argc, char** argv)
   std::streambuf* orig_cin = 0;
   switch (argc) {
     case 1:
+      // just use the standard input!
       std::cout << "using user input\n";
       streamPtr = &std::cin;
-      // just use the standard input!
       break;
 
     case 2:
@@ -47,8 +48,10 @@ int main(int argc, char** argv)
       scm::Object* expression = readInput(streamPtr);
       // EVALUATE
       std::cout << " // EVALUATE // \n";
+      scm::Object* value = evaluate(expression);
       // PRINT
       std::cout << " // PRINT // \n";
+      std::cout << scm::toString(value) << std::endl;
     }
     catch (const char* exception) {
       std::cerr << "[ERROR] " << exception;
