@@ -48,35 +48,31 @@ std::vector<std::string> splitLine(std::string line)
   return v;
 }
 
-void tokenizeLine(std::vector<std::string> lineVector, InputVector& tokens)
+scm::Object* interpretList(std::vector<std::string>::iterator& current)
 {
-  /**
-   * Creates tokens out of the elements detected in an input.
-   *
-   * @param lineVector contains the individual strings that make up the input
-   */
-  for (std::string item : lineVector) {
-    if (isString(item)) {
-      std::cout << "read string";
-      tokens.push_back(newString(item));
-    }
-    else if (isInt(item)) {
-      std::cout << "read integer";
-      tokens.push_back(newInteger(std::stoi(item)));
-    }
-    else if (isFloat(item)) {
-      std::cout << "read float";
-      tokens.push_back(newFloat(stof(item)));
-    }
-    else if (isSymbol(item)) {
-      std::cout << "read symbol";
-      tokens.push_back(newSybmol(item));
-    }
-    else {
-      std::cout << "Invalid symbol encountered!";
-    }
-    std::cout << ": " << item << "\n";
-  }
+  std::cout << "car: " << *current << " cdr: " << *(current + 1) << "\n";
+  scm::Object *car, *cdr;
+
+  car = interpretInput(current);
+  cdr = (*(++current) == ")") ? SCM_NIL : interpretList(current);
+
+  return newCons(car, cdr);
+}
+
+scm::Object* interpretInput(std::vector<std::string>::iterator& current)
+{
+  if (isInt(*current))
+    return newInteger(std::stoi(*current));
+  if (isFloat(*current))
+    return newFloat(stof(*current));
+  else if (isString(*current))
+    return newString(*current);
+  else if (*current == "(")
+    return interpretList(++current);
+  else if (isSymbol(*current))
+    return newSybmol(*current);
+  else
+    throw("{{" + *current + "}} could not be interpreted.");
 }
 
 bool canBeEvaluated(const std::vector<std::string>& v)
@@ -110,7 +106,12 @@ InputVector readInput()
     elements.insert(elements.end(), std::make_move_iterator(split.begin()), std::make_move_iterator(split.end()));
   } while (!canBeEvaluated(elements));
 
-  tokenizeLine(elements, v);
-  std::cout << "successfully read expression!\n";
+  for (const auto& e : elements)
+    std::cout << " " << e;
+
+  std::cout << std::endl;
+  std::vector<std::string>::iterator iter{elements.begin()};
+  scm::Object* obj{interpretInput(iter)};
+  std::cout << "successfully read expression! " << scm::toString(obj) << "\n";
   return v;
 }
