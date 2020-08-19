@@ -42,7 +42,9 @@ std::vector<std::string> splitLine(std::string line)
    */
   std::vector<std::string> v;
   std::regex re(R"(\".*\"|[\+\/\*\-\%\(\)]|[\w\d]+)");
-  for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re); i != std::sregex_iterator(); i++) {
+  for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re);
+       i != std::sregex_iterator();
+       i++) {
     v.push_back(std::smatch(*i).str());
   }
   return v;
@@ -89,29 +91,26 @@ bool canBeEvaluated(const std::vector<std::string>& v)
   return openParanthesesCount == closeParanthesesCount;
 }
 
-InputVector readInput()
+scm::Object* readInput(std::istream* streamPtr)
 {
-  // setup container to keep tokens
-  InputVector v;
+  // setup container to keep the individual lexical elements
   std::vector<std::string> elements;
   std::string line;
 
   // read symbols until we have an evaluatable expression
   std::cout << "> ";
   do {
-    std::getline(std::cin, line);
-    std::cout << "read: " << line << '\n';
+    std::getline(*streamPtr, line);
     // TODO: input stack!
+    // TODO: handle fileStream exit condition
     std::vector<std::string> split = splitLine(line);
-    elements.insert(elements.end(), std::make_move_iterator(split.begin()), std::make_move_iterator(split.end()));
+    elements.insert(elements.end(),
+                    std::make_move_iterator(split.begin()),
+                    std::make_move_iterator(split.end()));
   } while (!canBeEvaluated(elements));
 
-  for (const auto& e : elements)
-    std::cout << " " << e;
-
-  std::cout << std::endl;
   std::vector<std::string>::iterator iter{elements.begin()};
   scm::Object* obj{interpretInput(iter)};
   std::cout << "successfully read expression! " << scm::toString(obj) << "\n";
-  return v;
+  return obj;
 }
