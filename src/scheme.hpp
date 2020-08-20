@@ -1,4 +1,5 @@
 #pragma once
+#include <exception>
 #include <iostream>
 #include <string>
 #include <variant>
@@ -64,48 +65,27 @@ struct Object {
   Object(ObjectTypeTag tag) : tag(tag){};
 };
 
-inline std::string toString(scm::Object* obj);
-static std::string consToString(scm::Object* cons, std::string& str)
-{
-  scm::Object *car, *cdr;
-  car = std::get<ConsValue>(cons->value).car;
-  cdr = std::get<ConsValue>(cons->value).cdr;
-  str += toString(car) + " ";
-  if (cdr->tag == TAG_NIL)
-    return str + ")";
-  return consToString(cdr, str);
-}
+struct schemeException : public std::exception {
+  std::string m_error;
+  schemeException(std::string error) : m_error{error} {}
+  const char* what() const noexcept { return m_error.c_str(); }
+};
 
-inline std::string toString(scm::Object* obj)
-{
-  std::string consStart;
-  switch (obj->tag) {
-    case TAG_INT:
-      return std::to_string(std::get<int>(obj->value));
-      break;
-    case TAG_FLOAT:
-      return std::to_string(std::get<double>(obj->value));
-      break;
-    case TAG_STRING:
-      return '"' + std::get<std::string>(obj->value) + '"';
-      break;
-    case TAG_NIL:
-      return "()'";
-      break;
-    case TAG_FALSE:
-      return "#f";
-      break;
-    case TAG_TRUE:
-      return "#t";
-      break;
-    case TAG_CONS:
-      consStart = "( ";
-      return consToString(obj, consStart);
-      break;
-    default:
-      return "{{NOT YET IMPLEMENTED}}";
-      break;
-  }
-}
+// Forward Declarations
+std::string getStringValue(Object* obj);
+int getIntValue(Object* obj);
+double getFloatValue(Object* obj);
+ConsValue getCons(Object* obj);
+Object* getCar(Object* obj);
+Object* getCdr(Object* obj);
+FunctionTag getBuiltinFuncTag(Object* obj);
+std::string getBuiltinFuncName(Object* obj);
+int getBuiltinFuncNArgs(Object* obj);
+bool hasTag(Object* obj, ObjectTypeTag tag);
+bool isString(Object* obj);
+bool isNumeric(Object* obj);
+bool isFloatingPoint(Object* obj);
+std::string toString(scm::Object* obj);
+static std::string consToString(scm::Object* cons, std::string& str);
 
 }  // namespace scm
