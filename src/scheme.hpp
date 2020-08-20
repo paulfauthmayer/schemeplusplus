@@ -20,15 +20,47 @@ enum ObjectTypeTag {
   TAG_SYNTAX,
 };
 
+enum FunctionTag {
+  SYNTAX_QUOTE,
+  SYNTAX_LAMBDA,
+  SYNTAX_DEFINE,
+  SYNTAX_IF,
+  SYNTAX_SET,
+  SYNTAX_BEGIN,
+
+  FUNC_ADD,
+  FUNC_SUB,
+  FUNC_MULT,
+  FUNC_CONS,
+  FUNC_CAR,
+  FUNC_CDR,
+  FUNC_EQUAL,
+  FUNC_GT,
+  FUNC_LT,
+  FUNC_LIST,
+  FUNC_DISPLAY,
+  FUNC_IS_STRING,
+  FUNC_IS_NUMBER,
+  FUNC_IS_CONS,
+  FUNC_IS_FUNC,
+  FUNC_IS_USERFUNC,
+  FUNC_IS_BOOL,
+};
+
 struct Object;
 struct ConsValue {
   Object* car;
   Object* cdr;
 };
+struct FuncValue {
+  std::string name;
+  int nArgs;
+  FunctionTag funcTag;
+};
 
 struct Object {
   ObjectTypeTag tag;
-  std::variant<int, double, std::string, ConsValue> value;
+  std::variant<int, double, std::string, ConsValue, FuncValue> value;
   Object(ObjectTypeTag tag) : tag(tag){};
 };
 
