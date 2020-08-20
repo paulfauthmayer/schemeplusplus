@@ -1,4 +1,9 @@
 #include <iostream>
+#include "environment.hpp"
 #include "scheme.hpp"
 
-scm::Object* evaluate(scm::Object* obj);
+namespace scm {
+
+Object* evaluate(Environment& env, Object* obj);
+
+}  // namespace scm

@@ -1,5 +1,7 @@
+#include <exception>
 #include <fstream>
 #include <iostream>
+#include "environment.hpp"
 #include "evaluate.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
@@ -12,7 +14,8 @@ scm::Object* repl(){};
 int main(int argc, char** argv)
 {
   // setup initial starting point
-  initializeSingletons();
+  scm::Environment topLevelEnv{};
+  scm::initializeSingletons();
   std::cout << "scheme interpreter version " << 0.1 << '\n';
 
   // define input stream either as cin or from file
@@ -45,16 +48,16 @@ int main(int argc, char** argv)
     try {
       // READ
       std::cout << " // READ // \n";
-      scm::Object* expression = readInput(streamPtr);
+      scm::Object* expression = scm::readInput(streamPtr);
       // EVALUATE
       std::cout << " // EVALUATE // \n";
-      scm::Object* value = evaluate(expression);
+      scm::Object* value = scm::evaluate(topLevelEnv, expression);
       // PRINT
       std::cout << " // PRINT // \n";
       std::cout << scm::toString(value) << std::endl;
     }
-    catch (const char* exception) {
-      std::cerr << "[ERROR] " << exception;
+    catch (std::exception& e) {
+      std::cerr << "[ERROR] " << exception.what();
     }
   } while (std::cin);  // LOOP!
 
