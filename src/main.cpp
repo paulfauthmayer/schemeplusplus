@@ -23,8 +23,11 @@ void repl(scm::Environment& env, std::istream* streamPtr)
       std::cout << " // PRINT // \n";
       std::cout << scm::toString(value) << std::endl;
     }
+    catch (scm::schemeException& e) {
+      std::cerr << "[SCM::ERROR] " << e.what() << '\n';
+    }
     catch (std::exception& e) {
-      std::cerr << "[ERROR] " << e.what() << '\n';
+      std::cerr << "[CPP::ERROR] " << e.what() << '\n';
     }
   } while (true);  // LOOP!
 };
