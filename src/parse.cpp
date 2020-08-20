@@ -7,6 +7,8 @@
 #include "memory.hpp"
 #include "scheme.hpp"
 
+namespace scm {
+
 // CHECK FUNCTIONS
 
 bool isFloat(std::string str)
@@ -50,10 +52,10 @@ std::vector<std::string> splitLine(std::string line)
   return v;
 }
 
-scm::Object* interpretList(std::vector<std::string>::iterator& current)
+Object* interpretList(std::vector<std::string>::iterator& current)
 {
   std::cout << "car: " << *current << " cdr: " << *(current + 1) << "\n";
-  scm::Object *car, *cdr;
+  Object *car, *cdr;
 
   car = interpretInput(current);
   cdr = (*(++current) == ")") ? SCM_NIL : interpretList(current);
@@ -61,7 +63,7 @@ scm::Object* interpretList(std::vector<std::string>::iterator& current)
   return newCons(car, cdr);
 }
 
-scm::Object* interpretInput(std::vector<std::string>::iterator& current)
+Object* interpretInput(std::vector<std::string>::iterator& current)
 {
   if (isInt(*current))
     return newInteger(std::stoi(*current));
@@ -91,7 +93,7 @@ bool canBeEvaluated(const std::vector<std::string>& v)
   return openParanthesesCount == closeParanthesesCount;
 }
 
-scm::Object* readInput(std::istream* streamPtr)
+Object* readInput(std::istream* streamPtr)
 {
   // setup container to keep the individual lexical elements
   std::vector<std::string> elements;
@@ -110,7 +112,9 @@ scm::Object* readInput(std::istream* streamPtr)
   } while (!canBeEvaluated(elements));
 
   std::vector<std::string>::iterator iter{elements.begin()};
-  scm::Object* obj{interpretInput(iter)};
-  std::cout << "successfully read expression! " << scm::toString(obj) << "\n";
+  Object* obj{interpretInput(iter)};
+  std::cout << "successfully read expression! " << toString(obj) << "\n";
   return obj;
 }
+
+}  // namespace scm

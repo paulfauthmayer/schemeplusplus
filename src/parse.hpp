@@ -3,5 +3,9 @@
 #include <vector>
 #include "scheme.hpp"
 
-scm::Object* interpretInput(std::vector<std::string>::iterator& current);
-scm::Object* readInput(std::istream* streamPtr);
+namespace scm {
+
+Object* interpretInput(std::vector<std::string>::iterator& current);
+Object* readInput(std::istream* streamPtr);
+
+}  // namespace scm

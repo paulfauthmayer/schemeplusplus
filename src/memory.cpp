@@ -1,54 +1,60 @@
 #include "memory.hpp"
 #include "scheme.hpp"
 
-scm::Object* SCM_NIL;
-scm::Object* SCM_TRUE;
-scm::Object* SCM_FALSE;
+namespace scm {
+
+Object* SCM_NIL;
+Object* SCM_TRUE;
+Object* SCM_FALSE;
 
 void initializeSingletons()
 {
-  SCM_NIL = newSingleton(scm::TAG_NIL);
-  SCM_TRUE = newSingleton(scm::TAG_TRUE);
-  SCM_FALSE = newSingleton(scm::TAG_FALSE);
+  SCM_NIL = newSingleton(TAG_NIL);
+  SCM_TRUE = newSingleton(TAG_TRUE);
+  SCM_FALSE = newSingleton(TAG_FALSE);
 }
 
-scm::Object* newSingleton(scm::ObjectTypeTag type)
+Object* newSingleton(ObjectTypeTag type)
 {
-  scm::Object* obj{new scm::Object(type)};
+  Object* obj{new Object(type)};
   return obj;
 }
 
-scm::Object* newInteger(int value)
+Object* newInteger(int value)
 {
-  scm::Object* obj{new scm::Object(scm::TAG_INT)};
+  Object* obj{new Object(TAG_INT)};
   obj->value = value;
   return obj;
 }
 
-scm::Object* newFloat(double value)
+Object* newFloat(double value)
 {
-  scm::Object* obj{new scm::Object(scm::TAG_FLOAT)};
+  Object* obj{new Object(TAG_FLOAT)};
   obj->value = value;
   return obj;
 }
 
-scm::Object* newString(std::string value)
+Object* newString(std::string value)
 {
-  scm::Object* obj{new scm::Object(scm::TAG_STRING)};
+  Object* obj{new Object(TAG_STRING)};
   obj->value = value;
   return obj;
 }
 
-scm::Object* newSybmol(std::string value)
+Object* newSybmol(std::string value)
 {
-  scm::Object* obj{new scm::Object(scm::TAG_SYMBOL)};
+  Object* obj{new Object(TAG_SYMBOL)};
   obj->value = value;
   return obj;
 }
 
-scm::Object* newCons(scm::Object* car, scm::Object* cdr)
+Object* newCons(Object* car, Object* cdr)
 {
-  scm::Object* obj{new scm::Object(scm::TAG_CONS)};
-  obj->value = scm::ConsValue{car, cdr};
+  Object* obj{new Object(TAG_CONS)};
+  obj->value = ConsValue{car, cdr};
   return obj;
 }
+
+Object* newFunction(std::string name, int numArgs);
+
+}  // namespace scm

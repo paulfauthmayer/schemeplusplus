@@ -1,6 +1,8 @@
 #pragma once
 #include "scheme.hpp"
 
+namespace scm {
+
 void initializeSingletons();
 scm::Object* newSingleton(scm::ObjectTypeTag tag);
 scm::Object* newInteger(int value);
@@ -13,3 +15,5 @@ scm::Object* newCons(scm::Object* car, scm::Object* cdr);
 extern scm::Object* SCM_NIL;
 extern scm::Object* SCM_TRUE;
 extern scm::Object* SCM_FALSE;
+
+}  // namespace scm
