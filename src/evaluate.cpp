@@ -57,7 +57,7 @@ static Object* evaluateBuiltinFunction(Environment& env,
       break;
 
     default:
-      throw("undefined builtin function: " + toString(function));
+      throw(schemeException("undefined builtin function: " + toString(function)));
       break;
   }
 }
@@ -94,7 +94,7 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
       std::cout << NULL << '\n';
       if (!evaluatedObj) {
         std::cout << "variable is null!\n";
-        throw("undefined variable: " + std::get<std::string>(obj->value));
+        throw(schemeException("undefined variable: " + std::get<std::string>(obj->value)));
       }
       std::cout << "evaluated " + toString(obj) + " to " + toString(evaluatedObj) + '\n';
       return evaluatedObj;
@@ -116,13 +116,13 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
           return evaluateUserDefinedFunction(env, evaluatedOperation, arguments);
           break;
         default:
-          throw(toString(obj) + " doesn't exist");
+          throw(schemeException(toString(obj) + " doesn't exist"));
           break;
       }
       break;
     }
     default:
-      throw("evaluation not yet implemented for " + scm::toString(obj));
+      throw(schemeException("evaluation not yet implemented for " + scm::toString(obj)));
   }
 
   return SCM_NIL;

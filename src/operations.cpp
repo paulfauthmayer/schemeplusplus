@@ -13,7 +13,7 @@ namespace scm {
 std::vector<Object*> popN(std::stack<Object*>& stack, int n)
 {
   if (stack.size() < n)
-    throw("stack doesn't contain " + std::to_string(n) + " arguments!");
+    throw(schemeException("stack doesn't contain " + std::to_string(n) + " arguments!"));
   std::vector<Object*> values;
   for (int i{0}; i < n; i++) {
     values.push_back(stack.top());

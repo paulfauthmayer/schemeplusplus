@@ -76,7 +76,7 @@ Object* interpretInput(std::vector<std::string>::iterator& current)
   else if (isSymbol(*current))
     return newSybmol(*current);
   else
-    throw("{{" + *current + "}} could not be interpreted.");
+    throw(schemeException("{{" + *current + "}} could not be interpreted."));
 }
 
 bool canBeEvaluated(const std::vector<std::string>& v)

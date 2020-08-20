@@ -9,7 +9,25 @@
 
 #define DEBUG
 
-scm::Object* repl(){};
+void repl(scm::Environment& env, std::istream* streamPtr)
+{
+  do {
+    try {
+      // READ
+      std::cout << " // READ // \n";
+      scm::Object* expression = scm::readInput(streamPtr);
+      // EVALUATE
+      std::cout << " // EVALUATE // \n";
+      scm::Object* value = scm::evaluate(env, expression);
+      // PRINT
+      std::cout << " // PRINT // \n";
+      std::cout << scm::toString(value) << std::endl;
+    }
+    catch (std::exception& e) {
+      std::cerr << "[ERROR] " << e.what() << '\n';
+    }
+  } while (true);  // LOOP!
+};
 
 int main(int argc, char** argv)
 {
@@ -23,13 +41,13 @@ int main(int argc, char** argv)
   std::ifstream inputStream;
   std::streambuf* orig_cin = 0;
   switch (argc) {
-    case 1:
+    case 1: {
       // just use the standard input!
       std::cout << "using user input\n";
       streamPtr = &std::cin;
       break;
-
-    case 2:
+    }
+    case 2: {
       // redirect streambuffer of std::cin to the input file!
       std::cout << "using file " << argv[1] << " as input\n";
       inputStream.open(argv[1]);
@@ -37,29 +55,15 @@ int main(int argc, char** argv)
         return 1;
       streamPtr = &inputStream;
       break;
-
+    }
     default:
       std::cout << "Too many arguments!";
+      return 1;
       break;
   }
 
   // start the REPL
-  do {
-    try {
-      // READ
-      std::cout << " // READ // \n";
-      scm::Object* expression = scm::readInput(streamPtr);
-      // EVALUATE
-      std::cout << " // EVALUATE // \n";
-      scm::Object* value = scm::evaluate(topLevelEnv, expression);
-      // PRINT
-      std::cout << " // PRINT // \n";
-      std::cout << scm::toString(value) << std::endl;
-    }
-    catch (std::exception& e) {
-      std::cerr << "[ERROR] " << exception.what();
-    }
-  } while (std::cin);  // LOOP!
+  repl(topLevelEnv, streamPtr);
 
   return 0;
 }

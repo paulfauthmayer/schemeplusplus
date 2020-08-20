@@ -44,21 +44,21 @@ Object* getCdr(Object* obj)
 FunctionTag getBuiltinFuncTag(Object* obj)
 {
   if (obj->tag != TAG_FUNC_BUILTIN)
-    throw("not a builtin function!");
+    throw(schemeException("not a builtin function!"));
   return std::get<FuncValue>(obj->value).funcTag;
 }
 
 std::string getBuiltinFuncName(Object* obj)
 {
   if (obj->tag != TAG_FUNC_BUILTIN)
-    throw("not a builtin function!");
+    throw(schemeException("not a builtin function!"));
   return std::get<FuncValue>(obj->value).name;
 }
 
 int getBuiltinFuncNArgs(Object* obj)
 {
   if (obj->tag != TAG_FUNC_BUILTIN)
-    throw("not a builtin function!");
+    throw(schemeException("not a builtin function!"));
   return std::get<FuncValue>(obj->value).nArgs;
 }
 
