@@ -88,12 +88,18 @@ bool hasTag(Object* obj, ObjectTypeTag tag)
 static std::string consToString(scm::Object* cons, std::string& str)
 {
   scm::Object *car, *cdr;
-  car = std::get<ConsValue>(cons->value).car;
-  cdr = std::get<ConsValue>(cons->value).cdr;
+  car = getCar(cons);
+  cdr = getCdr(cons);
   str += toString(car) + " ";
-  if (cdr->tag == TAG_NIL)
+  if (hasTag(cdr, TAG_CONS)) {
+    return consToString(cdr, str);
+  }
+  else if (cdr->tag == TAG_NIL) {
     return str + ")";
-  return consToString(cdr, str);
+  }
+  else {
+    return str + ". " + toString(cdr) + ')';
+  }
 }
 
 std::string toString(Object* obj)
@@ -126,10 +132,12 @@ std::string toString(Object* obj)
       return consToString(obj, consStart);
       break;
     case TAG_FUNC_BUILTIN:
-      return "#<Function " + std::get<FuncValue>(obj->value).name + '>';
+      return "#<" + getBuiltinFuncName(obj) + '>';
       break;
+    case TAG_SYNTAX:
+      return "#<" + getBuiltinFuncName(obj) + '>';
     default:
-      return "{{NOT YET IMPLEMENTED}}";
+      return "{{TO STRING NOT YET IMPLEMENTED FOR TAG " + std::to_string(obj->tag) + "}}";
       break;
   }
 }
