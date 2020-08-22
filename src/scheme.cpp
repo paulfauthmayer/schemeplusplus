@@ -83,6 +83,12 @@ bool hasTag(Object* obj, ObjectTypeTag tag)
   return (getTag(obj) == tag);
 }
 
+bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes)
+{
+  auto lambda = [obj](ObjectTypeTag tag) { return hasTag(obj, tag); };
+  return std::any_of(validTypes.begin(), validTypes.end(), lambda);
+}
+
 // other helper functions
 
 static std::string consToString(scm::Object* cons, std::string& str)

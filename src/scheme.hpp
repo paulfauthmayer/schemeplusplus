@@ -1,6 +1,8 @@
 #pragma once
 #include <exception>
 #include <iostream>
+#include <regex>
+#include <sstream>
 #include <string>
 #include <variant>
 
@@ -32,14 +34,20 @@ enum FunctionTag {
   FUNC_ADD,
   FUNC_SUB,
   FUNC_MULT,
+  FUNC_DIV,
+  FUNC_MOD,
   FUNC_CONS,
   FUNC_CAR,
   FUNC_CDR,
+  FUNC_EQ,
   FUNC_EQUAL,
+  FUNC_EQUAL_NUMBER,
   FUNC_GT,
   FUNC_LT,
   FUNC_LIST,
   FUNC_DISPLAY,
+  FUNC_FUNCTION_BODY,
+  FUNC_FUNCTION_ARGLIST,
   FUNC_IS_STRING,
   FUNC_IS_NUMBER,
   FUNC_IS_CONS,
@@ -65,13 +73,34 @@ struct Object {
   Object(ObjectTypeTag tag) : tag(tag){};
 };
 
-struct schemeException : public std::exception {
+class schemeException : public std::runtime_error {
+ private:
   std::string m_error;
-  schemeException(std::string error) : m_error{error} {}
-  const char* what() const noexcept { return m_error.c_str(); }
+
+ public:
+  schemeException(const std::string& arg, const char* file, int line) : std::runtime_error(arg)
+  {
+    std::ostringstream o;
+    // TODO: make this work for windows as well
+    std::string filePath{file};
+    std::vector<std::string> v;
+    std::regex re(R"([^\\/]+)");
+    for (std::sregex_iterator i = std::sregex_iterator(filePath.begin(), filePath.end(), re);
+         i != std::sregex_iterator();
+         i++) {
+      v.push_back(std::smatch(*i).str());
+    }
+
+    o << "[ERROR:" << v.back() << ":" << line << "] " << arg;
+    m_error = o.str();
+  }
+  ~schemeException() throw() {}
+  const char* what() const throw() { return m_error.c_str(); }
 };
+#define schemeThrow(arg) throw schemeException(arg, __FILE__, __LINE__);
 
 // Forward Declarations
+ObjectTypeTag getTag(Object* obj);
 std::string getStringValue(Object* obj);
 int getIntValue(Object* obj);
 double getFloatValue(Object* obj);
@@ -85,6 +114,7 @@ bool hasTag(Object* obj, ObjectTypeTag tag);
 bool isString(Object* obj);
 bool isNumeric(Object* obj);
 bool isFloatingPoint(Object* obj);
+bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes);
 std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
 

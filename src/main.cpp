@@ -1,11 +1,14 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+#include <loguru.hpp>
 #include "environment.hpp"
 #include "evaluate.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
 #include "scheme.hpp"
+#include "setup.hpp"
+#include "test.hpp"
 
 #define DEBUG
 
@@ -24,7 +27,7 @@ void repl(scm::Environment& env, std::istream* streamPtr)
       std::cout << scm::toString(value) << std::endl;
     }
     catch (scm::schemeException& e) {
-      std::cerr << "[SCM::ERROR] " << e.what() << '\n';
+      std::cerr << e.what() << '\n';
     }
     catch (std::exception& e) {
       std::cerr << "[CPP::ERROR] " << e.what() << '\n';
@@ -34,10 +37,14 @@ void repl(scm::Environment& env, std::istream* streamPtr)
 
 int main(int argc, char** argv)
 {
+  loguru::init(argc, argv);
   // setup initial starting point
-  scm::Environment topLevelEnv{};
   scm::initializeSingletons();
+  scm::Environment topLevelEnv{};
+  scm::setupEnvironment(topLevelEnv);
   std::cout << "scheme interpreter version " << 0.1 << '\n';
+
+  runTests();
 
   // define input stream either as cin or from file
   std::istream* streamPtr;

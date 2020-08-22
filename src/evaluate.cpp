@@ -30,12 +30,14 @@ static Object* evaluateBuiltinFunction(Environment& env,
                                        scm::Object* function,
                                        scm::Object* arguments)
 {
+  std::cout << "evaluate builtin function\n";
   int nArgs = evaluateArguments(env, arguments);
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
-      addFunction(argumentStack, nArgs);
+      return addFunction(argumentStack, nArgs);
       break;
     case FUNC_SUB:
+      return subFunction(argumentStack, nArgs);
       break;
     case FUNC_MULT:
       break;
@@ -57,7 +59,7 @@ static Object* evaluateBuiltinFunction(Environment& env,
       break;
 
     default:
-      throw(schemeException("undefined builtin function: " + toString(function)));
+      schemeThrow("undefined builtin function: " + toString(function));
       break;
   }
 }
@@ -65,10 +67,12 @@ static Object* evaluateUserDefinedFunction(Environment& env,
                                            scm::Object* function,
                                            scm::Object* arguments)
 {
+  std::cout << "evaluate user defined function\n";
   return SCM_NIL;
 }
 static Object* evaluateSyntax(Environment& env, scm::Object* function, scm::Object* arguments)
 {
+  std::cout << "evaluate syntax\n";
   return SCM_NIL;
 }
 
@@ -90,11 +94,8 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
     case scm::TAG_SYMBOL: {
       std::cout << "getting variable " + toString(obj) + "\n";
       evaluatedObj = getVariable(env, obj);
-      std::cout << evaluatedObj << '\n';
-      std::cout << NULL << '\n';
       if (!evaluatedObj) {
-        std::cout << "variable is null!\n";
-        throw(schemeException("undefined variable: " + std::get<std::string>(obj->value)));
+        schemeThrow("undefined variable: " + std::get<std::string>(obj->value));
       }
       std::cout << "evaluated " + toString(obj) + " to " + toString(evaluatedObj) + '\n';
       return evaluatedObj;
@@ -116,13 +117,13 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
           return evaluateUserDefinedFunction(env, evaluatedOperation, arguments);
           break;
         default:
-          throw(schemeException(toString(obj) + " doesn't exist"));
+          schemeThrow(toString(evaluatedOperation) + " doesn't exist");
           break;
       }
       break;
     }
     default:
-      throw(schemeException("evaluation not yet implemented for " + scm::toString(obj)));
+      schemeThrow("evaluation not yet implemented for " + scm::toString(obj));
   }
 
   return SCM_NIL;
