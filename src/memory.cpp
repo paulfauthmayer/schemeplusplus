@@ -55,6 +55,19 @@ Object* newCons(Object* car, Object* cdr)
   return obj;
 }
 
-Object* newFunction(std::string name, int numArgs);
+Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag)
+{
+  Object* obj{new Object(TAG_FUNC_BUILTIN)};
+  obj->value = FuncValue{"primitive:" + name, numArgs, funcTag};
+  return obj;
+};
 
+Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag)
+{
+  Object* obj{new Object(TAG_SYNTAX)};
+  obj->value = FuncValue{"syntax:" + name, numArgs, funcTag};
+  return obj;
+}
+
+Object* newUserFunction();
 }  // namespace scm
