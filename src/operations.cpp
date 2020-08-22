@@ -11,8 +11,13 @@
 
 namespace scm {
 
-Object* pop(std::stack<Object*>& stack)
+Object* pop(ObjectStack& stack)
 {
+  /**
+   * Pops and returns the topmost element of a given ObjectStack
+   * @param stack the stack from which to pop
+   * @return the popped scm::Object*
+   */
   if (stack.empty()) {
     schemeThrow("trying to pop from empty stack");
   }
@@ -21,12 +26,18 @@ Object* pop(std::stack<Object*>& stack)
   return obj;
 }
 
-std::vector<Object*> popN(std::stack<Object*>& stack, int n)
+ObjectVec popN(ObjectStack& stack, int n)
 {
+  /**
+   * Pops and returns the topmost N elements of a given ObjectStack
+   * @param stack the stack from which to pop
+   * @param n the amount of values popped
+   * @return the popped objects in a ObjectVec
+   */
   DLOG_F(INFO, "popping %d values from stack", n);
   if (stack.size() < n)
     schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
-  std::vector<Object*> values;
+  ObjectVec values;
   for (int i{0}; i < n; i++) {
     values.push_back(stack.top());
     stack.pop();
@@ -34,10 +45,24 @@ std::vector<Object*> popN(std::stack<Object*>& stack, int n)
   return values;
 }
 
-Object* addFunction(std::stack<Object*>& stack, int nArgs)
+// BUILTIN SYNTAX
+Object* defineSyntax(ObjectStack& stack, int nArgs)
 {
   /**
-   * Function that handles the addition of a list of scm::Objects
+   * Define a new variable in a given environment
+   * @param stack: stack containing scm::Object*, which are the prepared arguments
+   * @param nArgs: how many arguments the function should take
+   * @return SCM_VOID
+   */
+  auto arguments = popN(stack, nArgs);
+}
+
+// BUILTIN FUNCTIONS
+
+Object* addFunction(ObjectStack& stack, int nArgs)
+{
+  /**
+   * Function that handles the addition or concatenation of multiple scm::Objects
    * @param stack: stack containing scm::Object*, which are the prepared arguments
    * @param nArgs: how many arguments the function should take
    * @return a new scm::Object* with the result of the computation
@@ -94,7 +119,7 @@ Object* addFunction(std::stack<Object*>& stack, int nArgs)
   }
 }
 
-Object* subFunction(std::stack<Object*> stack, int nArgs)
+Object* subFunction(ObjectStack stack, int nArgs)
 {
   // TODO: handle floats as int.int
   auto subtrahends = popN(stack, nArgs - 1);
@@ -129,26 +154,26 @@ Object* subFunction(std::stack<Object*> stack, int nArgs)
   }
 }
 
-// Object* multFunction(std::stack<Object*> stack, int nArgs);
-// Object* divFunction(std::stack<Object*> stack, int nArgs);
-// Object* modFunction(std::stack<Object*> stack, int nArgs);
-// Object* eqFunction(std::stack<Object*> stack, int nArgs);
-// Object* equalFunction(std::stack<Object*> stack, int nArgs);
-// Object* equalNumberFunction(std::stack<Object*> stack, int nArgs);
-// Object* greaterThanFunction(std::stack<Object*> stack, int nArgs);
-// Object* lesserThanFunction(std::stack<Object*> stack, int nArgs);
-// Object* consFunction(std::stack<Object*> stack, int nArgs);
-// Object* carFunction(std::stack<Object*> stack, int nArgs);
-// Object* cdrFunction(std::stack<Object*> stack, int nArgs);
-// Object* listFunction(std::stack<Object*> stack, int nArgs);
-// Object* displayFunction(std::stack<Object*> stack, int nArgs);
-// Object* functionBodyFunction(std::stack<Object*> stack, int nArgs);
-// Object* functionArglistFunction(std::stack<Object*> stack, int nArgs);
-// Object* isStringFunction(std::stack<Object*> stack, int nArgs);
-// Object* isNumberFunction(std::stack<Object*> stack, int nArgs);
-// Object* isConsFunction(std::stack<Object*> stack, int nArgs);
-// Object* isFunctionFunction(std::stack<Object*> stack, int nArgs);
-// Object* isUserFunctionFunction(std::stack<Object*> stack, int nArgs);
-// Object* isBoolFunctionFunction(std::stack<Object*> stack, int nArgs);
+// Object* multFunction(ObjectStack stack, int nArgs);
+// Object* divFunction(ObjectStack stack, int nArgs);
+// Object* modFunction(ObjectStack stack, int nArgs);
+// Object* eqFunction(ObjectStack stack, int nArgs);
+// Object* equalFunction(ObjectStack stack, int nArgs);
+// Object* equalNumberFunction(ObjectStack stack, int nArgs);
+// Object* greaterThanFunction(ObjectStack stack, int nArgs);
+// Object* lesserThanFunction(ObjectStack stack, int nArgs);
+// Object* consFunction(ObjectStack stack, int nArgs);
+// Object* carFunction(ObjectStack stack, int nArgs);
+// Object* cdrFunction(ObjectStack stack, int nArgs);
+// Object* listFunction(ObjectStack stack, int nArgs);
+// Object* displayFunction(ObjectStack stack, int nArgs);
+// Object* functionBodyFunction(ObjectStack stack, int nArgs);
+// Object* functionArglistFunction(ObjectStack stack, int nArgs);
+// Object* isStringFunction(ObjectStack stack, int nArgs);
+// Object* isNumberFunction(ObjectStack stack, int nArgs);
+// Object* isConsFunction(ObjectStack stack, int nArgs);
+// Object* isFunctionFunction(ObjectStack stack, int nArgs);
+// Object* isUserFunctionFunction(ObjectStack stack, int nArgs);
+// Object* isBoolFunctionFunction(ObjectStack stack, int nArgs);
 
 }  // namespace scm

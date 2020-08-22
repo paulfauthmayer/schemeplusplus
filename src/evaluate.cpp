@@ -9,7 +9,7 @@
 namespace scm {
 
 // define a stack that can hold multiple objects!
-static std::stack<scm::Object*> argumentStack{};
+static ObjectStack argumentStack{};
 
 // evaluate functions and syntax
 static int evaluateArguments(Environment& env, Object* arguments)

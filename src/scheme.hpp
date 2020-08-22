@@ -3,6 +3,7 @@
 #include <iostream>
 #include <regex>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <variant>
 
@@ -118,4 +119,7 @@ bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes);
 std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
 
+// Macros
+using ObjectVec = std::vector<Object*>;
+using ObjectStack = std::stack<Object*>;
 }  // namespace scm
