@@ -11,21 +11,33 @@ ObjectTypeTag getTag(Object* obj)
 
 std::string getStringValue(Object* obj)
 {
+  if (!hasTag(obj, TAG_STRING) && !hasTag(obj, TAG_SYMBOL)) {
+    schemeThrow("object has no string value that could be gotten");
+  }
   return std::get<std::string>(obj->value);
 }
 
 int getIntValue(Object* obj)
 {
+  if (!hasTag(obj, TAG_INT)) {
+    schemeThrow("object has no integer value that could be gotten");
+  }
   return std::get<int>(obj->value);
 }
 
 double getFloatValue(Object* obj)
 {
+  if (!hasTag(obj, TAG_FLOAT)) {
+    schemeThrow("object has no float value that could be gotten");
+  }
   return std::get<double>(obj->value);
 }
 
 ConsValue getCons(Object* obj)
 {
+  if (!hasTag(obj, TAG_CONS)) {
+    schemeThrow("tried to get consvalue from non-cons object");
+  }
   return std::get<ConsValue>(obj->value);
 }
 
@@ -43,22 +55,25 @@ Object* getCdr(Object* obj)
 
 FunctionTag getBuiltinFuncTag(Object* obj)
 {
-  if (obj->tag != TAG_FUNC_BUILTIN)
-    throw(schemeException("not a builtin function!"));
+  if (!isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_SYNTAX})) {
+    schemeThrow("not a builtin function!");
+  }
   return std::get<FuncValue>(obj->value).funcTag;
 }
 
 std::string getBuiltinFuncName(Object* obj)
 {
-  if (obj->tag != TAG_FUNC_BUILTIN)
-    throw(schemeException("not a builtin function!"));
+  if (!isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_SYNTAX})) {
+    schemeThrow("not a builtin function!");
+  }
   return std::get<FuncValue>(obj->value).name;
 }
 
 int getBuiltinFuncNArgs(Object* obj)
 {
-  if (obj->tag != TAG_FUNC_BUILTIN)
-    throw(schemeException("not a builtin function!"));
+  if (!isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_SYNTAX})) {
+    schemeThrow("not a builtin function!");
+  }
   return std::get<FuncValue>(obj->value).nArgs;
 }
 
