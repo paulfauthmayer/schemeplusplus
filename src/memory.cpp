@@ -41,7 +41,7 @@ Object* newString(std::string value)
   return obj;
 }
 
-Object* newSybmol(std::string value)
+Object* newSymbol(std::string value)
 {
   Object* obj{new Object(TAG_SYMBOL)};
   obj->value = value;

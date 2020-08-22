@@ -4,16 +4,18 @@
 namespace scm {
 
 void initializeSingletons();
-scm::Object* newSingleton(scm::ObjectTypeTag tag);
-scm::Object* newInteger(int value);
-scm::Object* newFloat(double value);
-scm::Object* newString(std::string value);
-scm::Object* newEnv();
-scm::Object* newSybmol(std::string value);
-scm::Object* newCons(scm::Object* car, scm::Object* cdr);
+Object* newSingleton(ObjectTypeTag tag);
+Object* newInteger(int value);
+Object* newFloat(double value);
+Object* newString(std::string value);
+Object* newEnv();
+Object* newSymbol(std::string value);
+Object* newCons(Object* car, Object* cdr);
+Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag);
+Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag);
 
-extern scm::Object* SCM_NIL;
-extern scm::Object* SCM_TRUE;
-extern scm::Object* SCM_FALSE;
+extern Object* SCM_NIL;
+extern Object* SCM_TRUE;
+extern Object* SCM_FALSE;
 
 }  // namespace scm

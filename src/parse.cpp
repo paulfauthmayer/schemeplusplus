@@ -74,7 +74,7 @@ Object* interpretInput(std::vector<std::string>::iterator& current)
   else if (*current == "(")
     return interpretList(++current);
   else if (isSymbol(*current))
-    return newSybmol(*current);
+    return newSymbol(*current);
   else
     throw(schemeException("{{" + *current + "}} could not be interpreted."));
 }
