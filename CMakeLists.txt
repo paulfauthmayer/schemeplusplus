@@ -19,7 +19,9 @@ add_executable(scheme
   src/parse.cpp 
   src/evaluate.cpp 
   src/operations.cpp
-  src/environment.cpp)
+  src/environment.cpp
+  include/loguru.cpp
+  )
 
 # tell clang to use c++17 standard
 target_compile_features(scheme PRIVATE cxx_std_20)
