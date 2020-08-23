@@ -123,7 +123,7 @@ Object* addFunction(ObjectStack& stack, int nArgs)
   }
 }
 
-Object* subFunction(ObjectStack stack, int nArgs)
+Object* subFunction(ObjectStack& stack, int nArgs)
 {
   // TODO: handle floats as int.int
   auto subtrahends = popN(stack, nArgs - 1);
