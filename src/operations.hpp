@@ -5,6 +5,7 @@ namespace scm {
 
 // SYNTAX
 Object* defineSyntax(Environment& env, Object* arguments);
+Object* quoteSyntax(Object* argumentCons);
 
 // BUILTIN FUNCTIONS
 Object* addFunction(ObjectStack& stack, int nArgs);

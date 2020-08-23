@@ -132,6 +132,7 @@ static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object
   }
   switch (getBuiltinFuncTag(syntax)) {
     case SYNTAX_QUOTE:
+      return quoteSyntax(arguments);
       break;
     case SYNTAX_LAMBDA:
       break;

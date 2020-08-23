@@ -90,6 +90,11 @@ Object* defineSyntax(Environment& env, scm::Object* arguments)
   return SCM_VOID;
 }
 
+Object* quoteSyntax(Object* argumentCons)
+{
+  return argumentCons;
+}
+
 // BUILTIN FUNCTIONS
 
 Object* addFunction(ObjectStack& stack, int nArgs)
