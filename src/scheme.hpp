@@ -70,9 +70,18 @@ struct FuncValue {
   FunctionTag funcTag;
 };
 
+class Environment;  // forward definition for environment.hpp
+struct UserFuncValue {
+  std::string name;
+  int nArgs;
+  Object* argList;
+  Object* bodyList;
+  Environment* env;
+};
+
 struct Object {
   ObjectTypeTag tag;
-  std::variant<int, double, std::string, ConsValue, FuncValue> value;
+  std::variant<int, double, std::string, ConsValue, FuncValue, UserFuncValue> value;
   Object(ObjectTypeTag tag) : tag(tag){};
 };
 
@@ -113,6 +122,9 @@ Object* getCdr(Object* obj);
 FunctionTag getBuiltinFuncTag(Object* obj);
 std::string getBuiltinFuncName(Object* obj);
 int getBuiltinFuncNArgs(Object* obj);
+Object* getUserFunctionBodyList(Object* obj);
+Object* getUserFunctionArgList(Object* obj);
+Environment* getUserFunctionParentEnv(Object* obj);
 bool hasTag(Object* obj, ObjectTypeTag tag);
 bool isString(Object* obj);
 bool isNumeric(Object* obj);

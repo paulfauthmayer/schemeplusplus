@@ -77,6 +77,30 @@ int getBuiltinFuncNArgs(Object* obj)
   return std::get<FuncValue>(obj->value).nArgs;
 }
 
+Object* getUserFunctionArgList(Object* obj)
+{
+  if (!hasTag(obj, TAG_FUNC_USER)) {
+    schemeThrow("not a user function!");
+  }
+  return std::get<UserFuncValue>(obj->value).argList;
+}
+
+Object* getUserFunctionBodyList(Object* obj)
+{
+  if (!hasTag(obj, TAG_FUNC_USER)) {
+    schemeThrow("not a user function!");
+  }
+  return std::get<UserFuncValue>(obj->value).bodyList;
+}
+
+Environment* getUserFunctionParentEnv(Object* obj)
+{
+  if (!hasTag(obj, TAG_FUNC_USER)) {
+    schemeThrow("not a user function!");
+  }
+  return std::get<UserFuncValue>(obj->value).env;
+}
+
 // Bool operations
 bool isString(Object* obj)
 {
@@ -157,6 +181,8 @@ std::string toString(Object* obj)
       break;
     case TAG_SYNTAX:
       return "#<" + getBuiltinFuncName(obj) + '>';
+    case TAG_VOID:
+      return "V̱̲̠̹̪́ͨ̇̄̏ͤ́̊͌Ơ̶̸̖̮̙̘̻̘͇̘ͭ͋͛̾̇Į̶̯ͦ̃́̅͗D̵͔̯̰̞͔̖̞̣͌ͪ̓ͨ͋";
     default:
       return "{{TO STRING NOT YET IMPLEMENTED FOR TAG " + std::to_string(obj->tag) + "}}";
       break;

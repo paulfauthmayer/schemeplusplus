@@ -80,8 +80,10 @@ static Object* evaluateBuiltinFunction(Environment& env,
       return listFunction(argumentStack, nArgs);
       break;
     case FUNC_FUNCTION_BODY:
+      return functionBodyFunction(argumentStack, nArgs);
       break;
     case FUNC_FUNCTION_ARGLIST:
+      return functionArglistFunction(argumentStack, nArgs);
       break;
     case FUNC_IS_STRING:
       return isStringFunction(argumentStack, nArgs);
@@ -105,13 +107,16 @@ static Object* evaluateBuiltinFunction(Environment& env,
       schemeThrow("undefined builtin function: " + toString(function));
       break;
   }
+  // this will never be returned!
+  return SCM_VOID;
 }
+
 static Object* evaluateUserDefinedFunction(Environment& env,
                                            scm::Object* function,
                                            scm::Object* arguments)
 {
   std::cout << "evaluate user defined function\n";
-  return SCM_NIL;
+  return SCM_VOID;
 }
 static Object* evaluateSyntax(Environment& env, scm::Object* function, scm::Object* arguments)
 {

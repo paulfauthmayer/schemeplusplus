@@ -397,7 +397,23 @@ Object* displayFunction(ObjectStack& stack, int nArgs)
   return SCM_VOID;
 }
 
-// Object* functionArglistFunction(ObjectStack& stack, int nArgs);
+Object* functionBodyFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  if (!hasTag(obj, TAG_FUNC_USER)) {
+    schemeThrow("function body is not a lambda");
+  }
+  return getUserFunctionBodyList(obj);
+}
+
+Object* functionArglistFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  if (!hasTag(obj, TAG_FUNC_USER)) {
+    schemeThrow("function arglist is not a lambda");
+  }
+  return getUserFunctionArgList(obj);
+}
 
 Object* isStringFunction(ObjectStack& stack, int nArgs)
 {
