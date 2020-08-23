@@ -13,6 +13,7 @@ class Environment {
   Environment(Environment* parent = NULL) : parentEnv(parent){};
   ~Environment() = default;
   friend void define(Environment& env, Object* key, Object* value);
+  friend Object* getBinding(Environment& env, Object* key);
   friend Object* getVariable(Environment& env, Object* key);
 };
 
