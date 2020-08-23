@@ -41,6 +41,13 @@ static Object* evaluateBuiltinFunction(Environment& env,
       return subFunction(argumentStack, nArgs);
       break;
     case FUNC_MULT:
+      return multFunction(argumentStack, nArgs);
+      break;
+    case FUNC_DIV:
+      return divFunction(argumentStack, nArgs);
+      break;
+    case FUNC_MOD:
+      return modFunction(argumentStack, nArgs);
       break;
     case FUNC_CONS:
       break;

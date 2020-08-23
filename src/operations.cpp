@@ -1,5 +1,6 @@
 #include "operations.hpp"
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <loguru.hpp>
 #include <numeric>
@@ -11,6 +12,7 @@
 
 namespace scm {
 
+// HELPER FUNCTIONS
 Object* pop(ObjectStack& stack)
 {
   /**
@@ -158,26 +160,88 @@ Object* subFunction(ObjectStack& stack, int nArgs)
   }
 }
 
-// Object* multFunction(ObjectStack stack, int nArgs);
-// Object* divFunction(ObjectStack stack, int nArgs);
-// Object* modFunction(ObjectStack stack, int nArgs);
-// Object* eqFunction(ObjectStack stack, int nArgs);
-// Object* equalFunction(ObjectStack stack, int nArgs);
-// Object* equalNumberFunction(ObjectStack stack, int nArgs);
-// Object* greaterThanFunction(ObjectStack stack, int nArgs);
-// Object* lesserThanFunction(ObjectStack stack, int nArgs);
-// Object* consFunction(ObjectStack stack, int nArgs);
-// Object* carFunction(ObjectStack stack, int nArgs);
-// Object* cdrFunction(ObjectStack stack, int nArgs);
-// Object* listFunction(ObjectStack stack, int nArgs);
-// Object* displayFunction(ObjectStack stack, int nArgs);
-// Object* functionBodyFunction(ObjectStack stack, int nArgs);
-// Object* functionArglistFunction(ObjectStack stack, int nArgs);
-// Object* isStringFunction(ObjectStack stack, int nArgs);
-// Object* isNumberFunction(ObjectStack stack, int nArgs);
-// Object* isConsFunction(ObjectStack stack, int nArgs);
-// Object* isFunctionFunction(ObjectStack stack, int nArgs);
-// Object* isUserFunctionFunction(ObjectStack stack, int nArgs);
-// Object* isBoolFunctionFunction(ObjectStack stack, int nArgs);
+Object* multFunction(ObjectStack& stack, int nArgs)
+{
+  ObjectVec arguments{popN(stack, nArgs)};
+  auto isValidType = [](Object* obj) { return isOneOf(obj, {TAG_INT, TAG_FLOAT}); };
+  if (!std::all_of(arguments.begin(), arguments.end(), isValidType)) {
+    schemeThrow("invalid type for multiplication");
+  }
+  else if (std::any_of(arguments.begin(), arguments.end(), isFloatingPoint)) {
+    auto lambda = [](double a, Object* b) {
+      if (hasTag(b, TAG_INT)) {
+        return static_cast<double>(getIntValue(b)) * a;
+      }
+      return a * getFloatValue(b);
+    };
+    return newFloat(std::reduce(arguments.begin(), arguments.end(), double(1), lambda));
+  }
+  else {
+    auto lambda = [](int a, Object* b) { return a * getIntValue(b); };
+    return newInteger(std::reduce(arguments.begin(), arguments.end(), int{1}, lambda));
+  }
+}
 
+Object* divFunction(ObjectStack& stack, int nArgs)
+{
+  Object* divisor{multFunction(stack, nArgs - 1)};
+  Object* dividend{pop(stack)};
+
+  if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
+    return newFloat(getFloatValue(dividend) / getFloatValue(divisor));
+  }
+  else if (isFloatingPoint(dividend)) {
+    return newFloat(getFloatValue(dividend) / static_cast<double>(getIntValue(divisor)));
+  }
+  else if (isFloatingPoint(divisor)) {
+    return newFloat(static_cast<double>(getIntValue(dividend)) / getFloatValue(divisor));
+  }
+  else {
+    return newFloat(static_cast<double>(getIntValue(dividend)) /
+                    static_cast<double>(getIntValue(divisor)));
+  }
+}
+Object* modFunction(ObjectStack& stack, int nArgs)
+{
+  if (nArgs != 2) {
+    schemeThrow("modulo expects excactly 2 arguments");
+  }
+  Object* divisor{pop(stack)};
+  Object* dividend{pop(stack)};
+  if (!isNumeric(divisor) || !isNumeric(dividend)) {
+    schemeThrow("modulo only works with numbers");
+  }
+
+  if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
+    return newFloat(std::fmod(getFloatValue(dividend), getFloatValue(divisor)));
+  }
+  else if (isFloatingPoint(dividend)) {
+    return newFloat(std::fmod(getFloatValue(dividend), static_cast<double>(getIntValue(divisor))));
+  }
+  else if (isFloatingPoint(divisor)) {
+    return newFloat(std::fmod(static_cast<double>(getIntValue(dividend)), getFloatValue(divisor)));
+  }
+  else {
+    return newInteger(getIntValue(dividend) % getIntValue(divisor));
+  }
+}
+
+Object* eqFunction(ObjectStack& stack, int nArgs) {}
+// Object* equalFunction(ObjectStack& stack, int nArgs);
+// Object* equalNumberFunction(ObjectStack& stack, int nArgs);
+// Object* greaterThanFunction(ObjectStack& stack, int nArgs);
+// Object* lesserThanFunction(ObjectStack& stack, int nArgs);
+// Object* consFunction(ObjectStack& stack, int nArgs);
+// Object* carFunction(ObjectStack& stack, int nArgs);
+// Object* cdrFunction(ObjectStack& stack, int nArgs);
+// Object* listFunction(ObjectStack& stack, int nArgs);
+// Object* displayFunction(ObjectStack& stack, int nArgs);
+// Object* functionBodyFunction(ObjectStack& stack, int nArgs);
+// Object* functionArglistFunction(ObjectStack& stack, int nArgs);
+// Object* isStringFunction(ObjectStack& stack, int nArgs);
+// Object* isNumberFunction(ObjectStack& stack, int nArgs);
+// Object* isConsFunction(ObjectStack& stack, int nArgs);
+// Object* isFunctionFunction(ObjectStack& stack, int nArgs);
+// Object* isUserFunctionFunction(ObjectStack& stack, int nArgs);
+// Object* isBoolFunctionFunction(ObjectStack& stack, int nArgs);
 }  // namespace scm
