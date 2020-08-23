@@ -4,12 +4,16 @@
 namespace scm {
 
 Object* SCM_NIL;
+Object* SCM_VOID;
+Object* SCM_EOF;
 Object* SCM_TRUE;
 Object* SCM_FALSE;
 
 void initializeSingletons()
 {
   SCM_NIL = newSingleton(TAG_NIL);
+  SCM_VOID = newSingleton(TAG_VOID);
+  SCM_EOF = newSingleton(TAG_EOF);
   SCM_TRUE = newSingleton(TAG_TRUE);
   SCM_FALSE = newSingleton(TAG_FALSE);
 }

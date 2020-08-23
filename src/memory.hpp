@@ -15,6 +15,8 @@ Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag);
 Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag);
 
 extern Object* SCM_NIL;
+extern Object* SCM_VOID;
+extern Object* SCM_EOF;
 extern Object* SCM_TRUE;
 extern Object* SCM_FALSE;
 

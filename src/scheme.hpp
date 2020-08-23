@@ -22,6 +22,8 @@ enum ObjectTypeTag {
   TAG_FUNC_BUILTIN,
   TAG_FUNC_USER,
   TAG_SYNTAX,
+  TAG_VOID,
+  TAG_EOF,
 };
 
 enum FunctionTag {
