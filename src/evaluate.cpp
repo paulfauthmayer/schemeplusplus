@@ -123,10 +123,32 @@ static Object* evaluateUserDefinedFunction(Environment& env,
   std::cout << "evaluate user defined function\n";
   return SCM_VOID;
 }
-static Object* evaluateSyntax(Environment& env, scm::Object* function, scm::Object* arguments)
+
+static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object* arguments)
 {
-  std::cout << "evaluate syntax\n";
-  return SCM_NIL;
+  DLOG_F(INFO, "evaluate builtin syntax %s", toString(syntax).c_str());
+  if (!hasTag(syntax, TAG_SYNTAX)) {
+    schemeThrow(toString(syntax) + " isn't a valid syntax");
+  }
+  switch (getBuiltinFuncTag(syntax)) {
+    case SYNTAX_QUOTE:
+      break;
+    case SYNTAX_LAMBDA:
+      break;
+    case SYNTAX_DEFINE:
+      defineSyntax(env, arguments);
+      break;
+    case SYNTAX_IF:
+      break;
+    case SYNTAX_SET:
+      break;
+    case SYNTAX_BEGIN:
+      break;
+    default:
+      schemeThrow("undefined syntax: " + toString(syntax));
+      break;
+  }
+  return SCM_VOID;
 }
 
 scm::Object* evaluate(Environment& env, scm::Object* obj)

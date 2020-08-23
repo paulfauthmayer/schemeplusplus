@@ -7,6 +7,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include "evaluate.hpp"
 #include "memory.hpp"
 #include "scheme.hpp"
 
@@ -64,15 +65,29 @@ void push(ObjectStack& stack, ObjectVec objects)
 }
 
 // BUILTIN SYNTAX
-Object* defineSyntax(ObjectStack& stack, int nArgs)
+Object* defineSyntax(Environment& env, scm::Object* arguments)
 {
   /**
    * Define a new variable in a given environment
-   * @param stack: stack containing scm::Object*, which are the prepared arguments
-   * @param nArgs: how many arguments the function should take
-   * @return SCM_VOID
+   * @param env: the environment in which to define the variable
+   * @param arguments: the arguments of the operation as a cons object
+   * @return a scm::Object with the result of the operation
    */
-  auto arguments = popN(stack, nArgs);
+  Object *symbol, *value;
+  if (arguments == SCM_NIL) {
+    schemeThrow("define takes exactyly 2 arguments");
+  }
+  symbol = getCar(arguments);
+  if (!hasTag(symbol, TAG_SYMBOL)) {
+    schemeThrow("can only define symbols");
+  }
+  value = getCdr(arguments);
+  if (value == SCM_NIL || getCdr(value) != SCM_NIL) {
+    schemeThrow("define takes exactyly 2 arguments");
+  }
+  value = evaluate(env, getCar(value));
+  define(env, symbol, value);
+  return SCM_VOID;
 }
 
 // BUILTIN FUNCTIONS
