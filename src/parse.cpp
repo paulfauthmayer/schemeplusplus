@@ -1,5 +1,6 @@
 #include "parse.hpp"
 #include <iostream>
+#include <loguru.hpp>
 #include <regex>
 #include <string>
 #include <typeinfo>
@@ -54,12 +55,9 @@ std::vector<std::string> splitLine(std::string line)
 
 Object* interpretList(std::vector<std::string>::iterator& current)
 {
-  std::cout << "car: " << *current << " cdr: " << *(current + 1) << "\n";
   Object *car, *cdr;
-
   car = interpretInput(current);
   cdr = (*(++current) == ")") ? SCM_NIL : interpretList(current);
-
   return newCons(car, cdr);
 }
 
@@ -89,7 +87,6 @@ bool canBeEvaluated(const std::vector<std::string>& v)
    */
   long openParanthesesCount{std::count(v.begin(), v.end(), "(")};
   long closeParanthesesCount{std::count(v.begin(), v.end(), ")")};
-  std::cout << "[open: " << openParanthesesCount << ", close: " << closeParanthesesCount << "]\n";
   return openParanthesesCount == closeParanthesesCount;
 }
 
@@ -113,7 +110,7 @@ Object* readInput(std::istream* streamPtr)
 
   std::vector<std::string>::iterator iter{elements.begin()};
   Object* obj{interpretInput(iter)};
-  std::cout << "successfully read expression! " << toString(obj) << "\n";
+  DLOG_F(INFO, "read expression %s", toString(obj).c_str());
   return obj;
 }
 

@@ -22,6 +22,11 @@ Object* pop(ObjectStack& stack)
     schemeThrow("trying to pop from empty stack");
   }
   Object* obj{stack.top()};
+  DLOG_F(INFO,
+         "popped {%s}, %d values remain on stack. next: %s",
+         toString(obj).c_str(),
+         stack.size(),
+         toString(stack.top()).c_str());
   stack.pop();
   return obj;
 }
@@ -39,8 +44,7 @@ ObjectVec popN(ObjectStack& stack, int n)
     schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
   ObjectVec values;
   for (int i{0}; i < n; i++) {
-    values.push_back(stack.top());
-    stack.pop();
+    values.push_back(pop(stack));
   }
   return values;
 }

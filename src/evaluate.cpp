@@ -1,5 +1,6 @@
 #include "evaluate.hpp"
 #include <iostream>
+#include <loguru.hpp>
 #include <stack>
 #include "environment.hpp"
 #include "memory.hpp"
@@ -30,7 +31,7 @@ static Object* evaluateBuiltinFunction(Environment& env,
                                        scm::Object* function,
                                        scm::Object* arguments)
 {
-  std::cout << "evaluate builtin function\n";
+  DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
   int nArgs = evaluateArguments(env, arguments);
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
@@ -92,19 +93,25 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
       break;
 
     case scm::TAG_SYMBOL: {
-      std::cout << "getting variable " + toString(obj) + "\n";
+      DLOG_F(INFO, "getting variable %s", toString(obj).c_str());
       evaluatedObj = getVariable(env, obj);
       if (!evaluatedObj) {
         schemeThrow("undefined variable: " + std::get<std::string>(obj->value));
       }
-      std::cout << "evaluated " + toString(obj) + " to " + toString(evaluatedObj) + '\n';
+      DLOG_F(INFO,
+             "evaluated variable %s to %s",
+             toString(obj).c_str(),
+             toString(evaluatedObj).c_str());
       return evaluatedObj;
       break;
     }
     case scm::TAG_CONS: {
       Object* operation{getCar(obj)};
       Object* arguments{getCdr(obj)};
-      std::cout << "operation: " + toString(operation) + " args: " + toString(arguments) + "\n";
+      DLOG_F(INFO,
+             "operation: %s arguments: %s",
+             toString(operation).c_str(),
+             toString(arguments).c_str());
       Object* evaluatedOperation = evaluate(env, operation);
       switch (evaluatedOperation->tag) {
         case TAG_FUNC_BUILTIN:

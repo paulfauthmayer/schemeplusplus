@@ -17,14 +17,15 @@ void repl(scm::Environment& env, std::istream* streamPtr)
   do {
     try {
       // READ
-      std::cout << " // READ // \n";
+      DLOG_F(INFO, "(R)epl");
       scm::Object* expression = scm::readInput(streamPtr);
       // EVALUATE
-      std::cout << " // EVALUATE // \n";
+      DLOG_F(INFO, "r(E)pl");
       scm::Object* value = scm::evaluate(env, expression);
       // PRINT
-      std::cout << " // PRINT // \n";
-      std::cout << scm::toString(value) << std::endl;
+      DLOG_F(INFO, "re(P)l");
+      std::cout << "--> " << scm::toString(value) << std::endl;
+      DLOG_F(INFO, "rep(L)");
     }
     catch (scm::schemeException& e) {
       std::cerr << e.what() << '\n';
@@ -53,13 +54,13 @@ int main(int argc, char** argv)
   switch (argc) {
     case 1: {
       // just use the standard input!
-      std::cout << "using user input\n";
+      DLOG_F(INFO, "using user input");
       streamPtr = &std::cin;
       break;
     }
     case 2: {
       // redirect streambuffer of std::cin to the input file!
-      std::cout << "using file " << argv[1] << " as input\n";
+      DLOG_F(INFO, "parsing input file %s", argv[1]);
       inputStream.open(argv[1]);
       if (!inputStream)
         return 1;
