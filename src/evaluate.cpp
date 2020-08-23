@@ -136,7 +136,7 @@ static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object
     case SYNTAX_LAMBDA:
       break;
     case SYNTAX_DEFINE:
-      defineSyntax(env, arguments);
+      return defineSyntax(env, arguments);
       break;
     case SYNTAX_IF:
       break;
