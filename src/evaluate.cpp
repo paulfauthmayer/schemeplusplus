@@ -33,6 +33,11 @@ static Object* evaluateBuiltinFunction(Environment& env,
 {
   DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
   int nArgs = evaluateArguments(env, arguments);
+  if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
+    schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
+                std::to_string(getBuiltinFuncNArgs(function)) + " arguments, got " +
+                std::to_string(nArgs) + '\n');
+  }
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
       return addFunction(argumentStack, nArgs);
