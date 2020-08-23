@@ -51,6 +51,18 @@ ObjectVec popN(ObjectStack& stack, int n)
   return values;
 }
 
+inline void push(ObjectStack& stack, Object* obj)
+{
+  stack.push(obj);
+}
+
+void push(ObjectStack& stack, ObjectVec objects)
+{
+  for (auto i = objects.rbegin(); i != objects.rend(); i++) {
+    push(stack, *i);
+  }
+}
+
 // BUILTIN SYNTAX
 Object* defineSyntax(ObjectStack& stack, int nArgs)
 {
@@ -226,22 +238,200 @@ Object* modFunction(ObjectStack& stack, int nArgs)
   }
 }
 
-Object* eqFunction(ObjectStack& stack, int nArgs) {}
-// Object* equalFunction(ObjectStack& stack, int nArgs);
-// Object* equalNumberFunction(ObjectStack& stack, int nArgs);
-// Object* greaterThanFunction(ObjectStack& stack, int nArgs);
-// Object* lesserThanFunction(ObjectStack& stack, int nArgs);
-// Object* consFunction(ObjectStack& stack, int nArgs);
-// Object* carFunction(ObjectStack& stack, int nArgs);
-// Object* cdrFunction(ObjectStack& stack, int nArgs);
-// Object* listFunction(ObjectStack& stack, int nArgs);
-// Object* displayFunction(ObjectStack& stack, int nArgs);
-// Object* functionBodyFunction(ObjectStack& stack, int nArgs);
+Object* eqFunction(ObjectStack& stack, int nArgs)
+{
+  Object* a{pop(stack)};
+  Object* b{pop(stack)};
+  return (a == b) ? SCM_TRUE : SCM_FALSE;
+}
+
+// TODO: can this be done?
+// Object* compareTwoNumbers(ObjectStack& stack, int nArgs, std::function comparison)
+// {
+//   Object* a{pop(stack)};
+//   Object* b{pop(stack)};
+//   if (!isNumeric(a) || !isNumeric(b)) {
+//     schemeThrow("= only works with numbers");
+//   }
+//   if (isFloatingPoint(a) && isFloatingPoint(b)) {
+//     return (comparison(getFloatValue(a), getFloatValue(b))) ? SCM_TRUE : SCM_FALSE;
+//   }
+//   else if (isFloatingPoint(a)) {
+//     return (comparison(getFloatValue(a), getIntValue(b))) ? SCM_TRUE : SCM_FALSE;
+//   }
+//   else if (isFloatingPoint(b)) {
+//     return (comparison(getIntValue(a), getFloatValue(b))) ? SCM_TRUE : SCM_FALSE;
+//   }
+//   else {
+//     return (comparison(getIntValue(a), getIntValue(b))) ? SCM_TRUE : SCM_FALSE;
+//   }
+// }
+
+Object* equalNumberFunction(ObjectStack& stack, int nArgs)
+{
+  Object* a{pop(stack)};
+  Object* b{pop(stack)};
+  if (!isNumeric(a) || !isNumeric(b)) {
+    schemeThrow("= only works with numbers");
+  }
+  if (isFloatingPoint(a) && isFloatingPoint(b)) {
+    return (getFloatValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(a)) {
+    return (getFloatValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(b)) {
+    return (getIntValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else {
+    return (getIntValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+}
+
+Object* equalFunction(ObjectStack& stack, int nArgs)
+{
+  Object* a{pop(stack)};
+  Object* b{pop(stack)};
+  if (isNumeric(a) && isNumeric(b)) {
+    push(stack, {a, b});
+    return equalNumberFunction(stack, nArgs);
+  }
+  else if (getTag(a) != getTag(b)) {
+    return SCM_FALSE;
+  }
+  else if (isString(a) && isString(b)) {
+    return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
+    schemeThrow("cons comparison not implemented yet!");
+  }
+  else {
+    schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
+  }
+}
+
+Object* greaterThanFunction(ObjectStack& stack, int nArgs)
+{
+  Object* a{pop(stack)};
+  Object* b{pop(stack)};
+  if (!isNumeric(a) || !isNumeric(b)) {
+    schemeThrow("= only works with numbers");
+  }
+  if (isFloatingPoint(a) && isFloatingPoint(b)) {
+    return (getFloatValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(a)) {
+    return (getFloatValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(b)) {
+    return (getIntValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else {
+    return (getIntValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+}
+
+Object* lesserThanFunction(ObjectStack& stack, int nArgs)
+{
+  Object* a{pop(stack)};
+  Object* b{pop(stack)};
+  if (!isNumeric(a) || !isNumeric(b)) {
+    schemeThrow("= only works with numbers");
+  }
+  if (isFloatingPoint(a) && isFloatingPoint(b)) {
+    return (getFloatValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(a)) {
+    return (getFloatValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else if (isFloatingPoint(b)) {
+    return (getIntValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+  else {
+    return (getIntValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+  }
+}
+
+Object* consFunction(ObjectStack& stack, int nArgs)
+{
+  Object* cdr{pop(stack)};
+  Object* car{pop(stack)};
+  return newCons(car, cdr);
+}
+
+Object* carFunction(ObjectStack& stack, int nArgs)
+{
+  Object* cons{pop(stack)};
+  if (!hasTag(cons, TAG_CONS)) {
+    schemeThrow("trying to get car value from non-cons object");
+  }
+  return getCar(cons);
+}
+
+Object* cdrFunction(ObjectStack& stack, int nArgs)
+{
+  Object* cons{pop(stack)};
+  if (!hasTag(cons, TAG_CONS)) {
+    schemeThrow("trying to get cdr value from non-cons object");
+  }
+  return getCdr(cons);
+}
+
+Object* listFunction(ObjectStack& stack, int nArgs)
+{
+  Object* rest;
+  while (nArgs--) {
+    Object* currentArgument{pop(stack)};
+    rest = newCons(currentArgument, rest);
+  }
+  return rest;
+}
+
+Object* displayFunction(ObjectStack& stack, int nArgs)
+{
+  ObjectVec arguments{popN(stack, nArgs)};
+  for (auto& arg : arguments) {
+    std::cout << toString(arg) << " ";
+  }
+  std::cout << '\n';
+  return SCM_VOID;
+}
+
 // Object* functionArglistFunction(ObjectStack& stack, int nArgs);
-// Object* isStringFunction(ObjectStack& stack, int nArgs);
-// Object* isNumberFunction(ObjectStack& stack, int nArgs);
-// Object* isConsFunction(ObjectStack& stack, int nArgs);
-// Object* isFunctionFunction(ObjectStack& stack, int nArgs);
-// Object* isUserFunctionFunction(ObjectStack& stack, int nArgs);
-// Object* isBoolFunctionFunction(ObjectStack& stack, int nArgs);
+
+Object* isStringFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (isString(obj)) ? SCM_TRUE : SCM_FALSE;
+}
+
+Object* isNumberFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (isNumeric(obj)) ? SCM_TRUE : SCM_FALSE;
+}
+
+Object* isConsFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (hasTag(obj, TAG_CONS)) ? SCM_TRUE : SCM_FALSE;
+}
+
+Object* isBuiltinFunctionFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (hasTag(obj, TAG_FUNC_BUILTIN)) ? SCM_TRUE : SCM_FALSE;
+}
+
+Object* isUserFunctionFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (hasTag(obj, TAG_FUNC_USER)) ? SCM_TRUE : SCM_FALSE;
+}
+
+Object* isBoolFunction(ObjectStack& stack, int nArgs)
+{
+  Object* obj{pop(stack)};
+  return (isOneOf(obj, {TAG_TRUE, TAG_FALSE})) ? SCM_TRUE : SCM_FALSE;
+}
 }  // namespace scm

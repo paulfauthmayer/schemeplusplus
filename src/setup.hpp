@@ -33,7 +33,7 @@ void setupEnvironment(Environment& env)
   defineNewBuiltinFunction(env, "*", -1, FUNC_MULT);
   defineNewBuiltinFunction(env, "/", -1, FUNC_DIV);
   defineNewBuiltinFunction(env, "%", 2, FUNC_MOD);
-  defineNewBuiltinFunction(env, "eq?", 2, FUNC_EQUAL);
+  defineNewBuiltinFunction(env, "eq?", 2, FUNC_EQ);
   defineNewBuiltinFunction(env, "equal?", 2, FUNC_EQUAL);
   defineNewBuiltinFunction(env, "=", 2, FUNC_EQUAL_NUMBER);
   defineNewBuiltinFunction(env, ">", 2, FUNC_GT);

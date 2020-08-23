@@ -50,22 +50,57 @@ static Object* evaluateBuiltinFunction(Environment& env,
       return modFunction(argumentStack, nArgs);
       break;
     case FUNC_CONS:
+      return consFunction(argumentStack, nArgs);
       break;
     case FUNC_CAR:
+      return carFunction(argumentStack, nArgs);
       break;
     case FUNC_CDR:
+      return cdrFunction(argumentStack, nArgs);
+      break;
+    case FUNC_EQ:
+      return eqFunction(argumentStack, nArgs);
       break;
     case FUNC_EQUAL:
+      return equalFunction(argumentStack, nArgs);
+      break;
+    case FUNC_EQUAL_NUMBER:
+      return equalNumberFunction(argumentStack, nArgs);
       break;
     case FUNC_GT:
+      return greaterThanFunction(argumentStack, nArgs);
       break;
     case FUNC_LT:
+      return lesserThanFunction(argumentStack, nArgs);
       break;
     case FUNC_DISPLAY:
+      return displayFunction(argumentStack, nArgs);
       break;
     case FUNC_LIST:
+      return listFunction(argumentStack, nArgs);
       break;
-
+    case FUNC_FUNCTION_BODY:
+      break;
+    case FUNC_FUNCTION_ARGLIST:
+      break;
+    case FUNC_IS_STRING:
+      return isStringFunction(argumentStack, nArgs);
+      break;
+    case FUNC_IS_NUMBER:
+      return isNumberFunction(argumentStack, nArgs);
+      break;
+    case FUNC_IS_CONS:
+      return isConsFunction(argumentStack, nArgs);
+      break;
+    case FUNC_IS_FUNC:
+      return isBuiltinFunctionFunction(argumentStack, nArgs);
+      break;
+    case FUNC_IS_USERFUNC:
+      return isUserFunctionFunction(argumentStack, nArgs);
+      break;
+    case FUNC_IS_BOOL:
+      return isBoolFunction(argumentStack, nArgs);
+      break;
     default:
       schemeThrow("undefined builtin function: " + toString(function));
       break;

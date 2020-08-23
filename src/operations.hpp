@@ -26,7 +26,7 @@ Object* functionArglistFunction(ObjectStack& stack, int nArgs);
 Object* isStringFunction(ObjectStack& stack, int nArgs);
 Object* isNumberFunction(ObjectStack& stack, int nArgs);
 Object* isConsFunction(ObjectStack& stack, int nArgs);
-Object* isFunctionFunction(ObjectStack& stack, int nArgs);
+Object* isBuiltinFunctionFunction(ObjectStack& stack, int nArgs);
 Object* isUserFunctionFunction(ObjectStack& stack, int nArgs);
 Object* isBoolFunction(ObjectStack& stack, int nArgs);
 

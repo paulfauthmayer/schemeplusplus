@@ -44,7 +44,7 @@ std::vector<std::string> splitLine(std::string line)
    * The lexer is implemented on top of regular expressions!
    */
   std::vector<std::string> v;
-  std::regex re(R"(\"[^\"]*\"|[\-\w\d\.]+|[\+\/\*\-\%\(\)])");
+  std::regex re(R"(\"[^\"]*\"|[\-\w\d\.\?]+|[\+\/\*\-\%\=\(\)])");
   for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re);
        i != std::sregex_iterator();
        i++) {
