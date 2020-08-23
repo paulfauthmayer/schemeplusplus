@@ -13,7 +13,7 @@ namespace scm {
 
 bool isFloat(std::string str)
 {
-  std::regex pattern(R"(^\-?[0-9]+\.[0-9]*$)");
+  std::regex pattern(R"(^\-?[0-9]*\.[0-9]+$)");
   return std::regex_match(str, pattern);
 }
 
