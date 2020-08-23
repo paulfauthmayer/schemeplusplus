@@ -390,8 +390,8 @@ Object* listFunction(ObjectStack& stack, int nArgs)
 Object* displayFunction(ObjectStack& stack, int nArgs)
 {
   ObjectVec arguments{popN(stack, nArgs)};
-  for (auto& arg : arguments) {
-    std::cout << toString(arg) << " ";
+  for (auto argument{arguments.rbegin()}; argument != arguments.rend(); argument++) {
+    std::cout << toString(*argument) << " ";
   }
   std::cout << '\n';
   return SCM_VOID;
