@@ -14,54 +14,41 @@
 namespace scm {
 
 // HELPER FUNCTIONS
-Object* pop(ObjectStack& stack)
+// TODO: maybe move this out, don't require env but require evaluated Object?
+Object* toSchemeBool(Environment& env, Object* obj)
 {
-  /**
-   * Pops and returns the topmost element of a given ObjectStack
-   * @param stack the stack from which to pop
-   * @return the popped scm::Object*
-   */
-  if (stack.empty()) {
-    schemeThrow("trying to pop from empty stack");
+  Object* evaluatedObject{evaluate(env, obj)};
+  switch (evaluatedObject->tag) {
+    case scm::TAG_INT: {
+      return (getIntValue(evaluatedObject) != 0) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_FLOAT: {
+      return (getFloatValue(evaluatedObject) != 0) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_STRING: {
+      return (getStringValue(evaluatedObject) == std::string{}) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_TRUE:
+    case scm::TAG_FUNC_BUILTIN:
+    case scm::TAG_FUNC_USER:
+    case scm::TAG_SYNTAX: {
+      return SCM_TRUE;
+      break;
+    }
+    case scm::TAG_NIL:
+    case scm::TAG_FALSE: {
+      return SCM_FALSE;
+      break;
+    }
+    default: {
+      schemeThrow("evaluation not yet implemented for " + scm::toString(obj));
+      break;
+    }
   }
-  Object* obj{stack.top()};
-  DLOG_F(INFO,
-         "popped {%s}, %d values remain on stack. next: %s",
-         toString(obj).c_str(),
-         stack.size(),
-         toString(stack.top()).c_str());
-  stack.pop();
-  return obj;
-}
-
-ObjectVec popN(ObjectStack& stack, int n)
-{
-  /**
-   * Pops and returns the topmost N elements of a given ObjectStack
-   * @param stack the stack from which to pop
-   * @param n the amount of values popped
-   * @return the popped objects in a ObjectVec
-   */
-  DLOG_F(INFO, "popping %d values from stack", n);
-  if (stack.size() < n)
-    schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
-  ObjectVec values;
-  for (int i{0}; i < n; i++) {
-    values.push_back(pop(stack));
-  }
-  return values;
-}
-
-inline void push(ObjectStack& stack, Object* obj)
-{
-  stack.push(obj);
-}
-
-void push(ObjectStack& stack, ObjectVec objects)
-{
-  for (auto i = objects.rbegin(); i != objects.rend(); i++) {
-    push(stack, *i);
-  }
+  return SCM_FALSE;
 }
 
 // BUILTIN SYNTAX
