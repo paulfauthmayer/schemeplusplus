@@ -260,8 +260,8 @@ Object* modFunction(ObjectStack& stack, int nArgs)
 
 Object* eqFunction(ObjectStack& stack, int nArgs)
 {
-  Object* a{pop(stack)};
   Object* b{pop(stack)};
+  Object* a{pop(stack)};
   return (a == b) ? SCM_TRUE : SCM_FALSE;
 }
 
@@ -289,8 +289,8 @@ Object* eqFunction(ObjectStack& stack, int nArgs)
 
 Object* equalNumberFunction(ObjectStack& stack, int nArgs)
 {
-  Object* a{pop(stack)};
   Object* b{pop(stack)};
+  Object* a{pop(stack)};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
@@ -310,8 +310,8 @@ Object* equalNumberFunction(ObjectStack& stack, int nArgs)
 
 Object* equalFunction(ObjectStack& stack, int nArgs)
 {
-  Object* a{pop(stack)};
   Object* b{pop(stack)};
+  Object* a{pop(stack)};
   if (isNumeric(a) && isNumeric(b)) {
     push(stack, {a, b});
     return equalNumberFunction(stack, nArgs);
@@ -332,8 +332,8 @@ Object* equalFunction(ObjectStack& stack, int nArgs)
 
 Object* greaterThanFunction(ObjectStack& stack, int nArgs)
 {
-  Object* a{pop(stack)};
   Object* b{pop(stack)};
+  Object* a{pop(stack)};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
@@ -353,8 +353,8 @@ Object* greaterThanFunction(ObjectStack& stack, int nArgs)
 
 Object* lesserThanFunction(ObjectStack& stack, int nArgs)
 {
-  Object* a{pop(stack)};
   Object* b{pop(stack)};
+  Object* a{pop(stack)};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
