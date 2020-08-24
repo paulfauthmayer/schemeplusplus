@@ -12,12 +12,14 @@ class Environment {
  public:
   Environment(Environment* parent = NULL) : parentEnv(parent){};
   ~Environment() = default;
+  friend void set(Environment& env, Object* key, Object* value);
   friend void define(Environment& env, Object* key, Object* value);
   friend Object* getBinding(Environment& env, Object* key);
   friend Object* getVariable(Environment& env, Object* key);
 };
 
 void define(Environment& env, Object* key, Object* value);
+void set(Environment& env, Object* key, Object* value);
 Object* getVariable(Environment& env, Object* key);
 
 }  // namespace scm
