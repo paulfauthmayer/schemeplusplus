@@ -179,6 +179,9 @@ std::string toString(Object* obj)
     case TAG_FUNC_BUILTIN:
       return "#<" + getBuiltinFuncName(obj) + '>';
       break;
+    case TAG_FUNC_USER:
+      return "(lambda " + toString(getUserFunctionArgList(obj)) + " " +
+             toString(getUserFunctionBodyList(obj)) + ")";
     case TAG_SYNTAX:
       return "#<" + getBuiltinFuncName(obj) + '>';
     case TAG_VOID:
