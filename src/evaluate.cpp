@@ -168,10 +168,24 @@ static Object* evaluateBuiltinFunction(Environment& env,
 
 static Object* evaluateUserDefinedFunction(Environment& env,
                                            scm::Object* function,
-                                           scm::Object* arguments)
+                                           scm::Object* argumentCons)
 {
-  std::cout << "evaluate user defined function\n";
-  return SCM_VOID;
+  DLOG_F(INFO, "evaluate user defined function");
+  Object* functionArguments{getUserFunctionArgList(function)};
+  Object* functionBody{getUserFunctionBodyList(function)};
+  Object* lastBodyResult;
+  Environment funcEnv{&env};
+
+  int nArgs = evaluateArguments(env, argumentCons);
+  ObjectVec evaluatedArguments{popN(argumentStack, nArgs)};
+  while (functionArguments != SCM_NIL) {
+    Object* argName{getCar(functionArguments)};
+    Object* argValue{evaluatedArguments[--nArgs]};
+    define(funcEnv, argName, argValue);
+    functionArguments = getCdr(functionArguments);
+  }
+
+  return evaluate(funcEnv, functionBody);
 }
 
 static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object* arguments)
