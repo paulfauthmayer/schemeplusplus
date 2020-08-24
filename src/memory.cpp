@@ -1,4 +1,5 @@
 #include "memory.hpp"
+#include <loguru.hpp>
 #include "scheme.hpp"
 
 namespace scm {
@@ -73,5 +74,11 @@ Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag)
   return obj;
 }
 
-Object* newUserFunction();
+Object* newUserFunction(Object* argList, Object* bodyList, Environment& homeEnv)
+{
+  Object* obj{new Object(TAG_FUNC_USER)};
+  obj->value = UserFuncValue{argList, bodyList, &homeEnv};
+  DLOG_F(INFO, "%s | %s", toString(argList).c_str(), toString(bodyList).c_str());
+  return obj;
+}
 }  // namespace scm

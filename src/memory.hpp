@@ -13,6 +13,7 @@ Object* newSymbol(std::string value);
 Object* newCons(Object* car, Object* cdr);
 Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag);
 Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag);
+Object* newUserFunction(Object* argList, Object* bodyList, Environment& homeEnv);
 
 extern Object* SCM_NIL;
 extern Object* SCM_VOID;

@@ -72,8 +72,6 @@ struct FuncValue {
 
 class Environment;  // forward definition for environment.hpp
 struct UserFuncValue {
-  std::string name;
-  int nArgs;
   Object* argList;
   Object* bodyList;
   Environment* env;
