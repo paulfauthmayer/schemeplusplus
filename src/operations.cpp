@@ -6,6 +6,7 @@
 #include <numeric>
 #include <stack>
 #include <string>
+#include <variant>
 #include <vector>
 #include "evaluate.hpp"
 #include "memory.hpp"
@@ -77,9 +78,79 @@ Object* defineSyntax(Environment& env, scm::Object* arguments)
   return SCM_VOID;
 }
 
+Object* setSyntax(Environment& env, Object* argumentCons)
+{
+  Object *symbol, *expression, *value;
+  try {
+    symbol = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    expression = getCar(argumentCons);
+    if (getCdr(argumentCons) != SCM_NIL) {
+      schemeThrow("set requires exactly two arguments: (set! {name} {value})");
+    }
+    value = evaluate(env, expression);
+    set(env, symbol, value);
+  }
+  catch (std::bad_variant_access& e) {
+    schemeThrow("set requires exactly two arguments: (set! {name} {value})");
+  }
+
+  return value;
+}
+
 Object* quoteSyntax(Object* argumentCons)
 {
   return argumentCons;
+}
+
+Object* ifSyntax(Environment& env, Object* argumentCons)
+{
+  Object *condition, *trueExpression, *falseExpression;
+  try {
+    condition = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    trueExpression = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    falseExpression = getCar(argumentCons);
+    if (getCdr(argumentCons) != SCM_NIL) {
+      schemeThrow("if requires 3 arguments: (if {condition} {true} {false})");
+    }
+  }
+  catch (std::bad_variant_access& e) {
+    schemeThrow("if requires 3 arguments: (if {condition} {true} {false})");
+  }
+  return (toSchemeBool(env, condition) == SCM_TRUE) ? evaluate(env, trueExpression)
+                                                    : evaluate(env, falseExpression);
+}
+
+Object* beginSyntax(Environment& env, Object* argumentCons)
+{
+  Object *currentExpression, *lastValue{SCM_NIL};
+  while (argumentCons != SCM_NIL) {
+    currentExpression = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    lastValue = evaluate(env, currentExpression);
+  };
+  return lastValue;
+}
+
+Object* lambdaSyntax(Environment& env, Object* argumentCons)
+{
+  Object *argList, *bodyList;
+  try {
+    argList = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    bodyList = getCar(argumentCons);
+    argumentCons = getCdr(argumentCons);
+    DLOG_F(INFO, "new lambda %s => %s", toString(argList).c_str(), toString(bodyList).c_str());
+    if (argumentCons != SCM_NIL) {
+      schemeThrow("lambda requires exactly two arguments: (lambda {argument} {body})");
+    }
+  }
+  catch (std::bad_variant_access& e) {
+    schemeThrow("lambda requires exactly two arguments: (lambda {argument} {body})");
+  }
+  return newUserFunction(argList, bodyList, env);
 }
 
 // BUILTIN FUNCTIONS

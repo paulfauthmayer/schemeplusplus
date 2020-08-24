@@ -185,15 +185,19 @@ static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object
       return quoteSyntax(arguments);
       break;
     case SYNTAX_LAMBDA:
+      return lambdaSyntax(env, arguments);
       break;
     case SYNTAX_DEFINE:
       return defineSyntax(env, arguments);
       break;
     case SYNTAX_IF:
+      return ifSyntax(env, arguments);
       break;
     case SYNTAX_SET:
+      return setSyntax(env, arguments);
       break;
     case SYNTAX_BEGIN:
+      return beginSyntax(env, arguments);
       break;
     default:
       schemeThrow("undefined syntax: " + toString(syntax));
