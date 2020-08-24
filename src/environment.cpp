@@ -9,12 +9,20 @@
 namespace scm {
 Object* getBinding(Environment& env, Object* key)
 {
-  auto lambda = [key](Object* binding) {
-    return (getStringValue(getCar(binding)) == getStringValue(key));
-  };
-  auto found = std::find_if(env.bindings.begin(), env.bindings.end(), lambda);
-
-  return (found != env.bindings.end()) ? *found : NULL;
+  Environment* currentEnv = &env;
+  while (currentEnv != NULL) {
+    auto lambda = [key](Object* binding) {
+      return (getStringValue(getCar(binding)) == getStringValue(key));
+    };
+    auto found = std::find_if(currentEnv->bindings.begin(), currentEnv->bindings.end(), lambda);
+    if (found != currentEnv->bindings.end()) {
+      return *found;
+    }
+    else {
+      currentEnv = currentEnv->parentEnv;
+    }
+  }
+  return NULL;
 }
 
 Object* getVariable(Environment& env, Object* key)
