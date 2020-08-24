@@ -42,9 +42,17 @@ void define(Environment& env, Object* key, Object* value)
   }
   else {
     DLOG_F(INFO, "redefine variable %s := %s", toString(key).c_str(), toString(value).c_str());
-    std::cout << getTag(currentDefinition) << "\n";
     std::get<ConsValue>(currentDefinition->value).cdr = value;
   }
+}
+
+void set(Environment& env, Object* key, Object* value)
+{
+  Environment* currentEnvPtr = &env;
+  do {
+    define(*currentEnvPtr, key, value);
+    currentEnvPtr = (*currentEnvPtr).parentEnv;
+  } while (currentEnvPtr != NULL);
 }
 
 }  // namespace scm
