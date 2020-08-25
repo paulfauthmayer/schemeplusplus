@@ -106,11 +106,12 @@ Object* readInput(std::istream* streamPtr)
     std::getline(*streamPtr, line);
     // TODO: input stack!
     // TODO: handle fileStream exit condition
+    line = line.substr(0, line.find(';'));
     std::vector<std::string> split = splitLine(line);
     elements.insert(elements.end(),
                     std::make_move_iterator(split.begin()),
                     std::make_move_iterator(split.end()));
-  } while (!canBeEvaluated(elements));
+  } while (!canBeEvaluated(elements) || elements.empty());
 
   std::vector<std::string>::iterator iter{elements.begin()};
   Object* obj{interpretInput(iter)};
