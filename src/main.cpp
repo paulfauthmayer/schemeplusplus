@@ -12,13 +12,13 @@
 
 #define DEBUG
 
-void repl(scm::Environment& env, std::istream* streamPtr)
+void repl(scm::Environment& env, std::istream* streamPtr, bool isFile = true)
 {
   do {
     try {
       // READ
       DLOG_F(INFO, "(R)epl");
-      scm::Object* expression = scm::readInput(streamPtr);
+      scm::Object* expression = scm::readInput(streamPtr, isFile);
       if (expression == scm::SCM_EOF) {
         return;
       }
@@ -27,7 +27,9 @@ void repl(scm::Environment& env, std::istream* streamPtr)
       scm::Object* value = scm::evaluate(env, expression);
       // PRINT
       DLOG_F(INFO, "re(P)l");
-      std::cout << "--> " << scm::toString(value) << std::endl;
+      if (value != scm::SCM_VOID) {
+        std::cout << "--> " << scm::toString(value) << std::endl;
+      }
       DLOG_F(INFO, "rep(L)");
     }
     catch (scm::schemeException& e) {
@@ -50,20 +52,28 @@ int main(int argc, char** argv)
 
   runTests();
 
+  // run function setup for those written in scheme
+  std::ifstream functionDefinitionStream;
+  functionDefinitionStream.open("/Users/paul/repos/uni/dipl/src/std.scm");
+  repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
+
   // define input stream either as cin or from file
   std::istream* streamPtr;
   std::ifstream inputStream;
   std::streambuf* orig_cin = 0;
+  bool isFile;
   switch (argc) {
     case 1: {
       // just use the standard input!
       DLOG_F(INFO, "using user input");
+      isFile = false;
       streamPtr = &std::cin;
       break;
     }
     case 2: {
       // redirect streambuffer of std::cin to the input file!
       DLOG_F(INFO, "parsing input file %s", argv[1]);
+      isFile = true;
       inputStream.open(argv[1]);
       if (!inputStream)
         return 1;
@@ -77,7 +87,7 @@ int main(int argc, char** argv)
   }
 
   // start the REPL
-  repl(topLevelEnv, streamPtr);
+  repl(topLevelEnv, streamPtr, isFile);
 
   return 0;
 }
