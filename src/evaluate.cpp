@@ -174,7 +174,7 @@ static Object* evaluateUserDefinedFunction(Environment& env,
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
   Object* lastBodyResult;
-  Environment funcEnv{&env};
+  Environment funcEnv{getUserFunctionParentEnv(function)};
 
   int nArgs = evaluateArguments(env, argumentCons);
   ObjectVec evaluatedArguments{popN(argumentStack, nArgs)};
