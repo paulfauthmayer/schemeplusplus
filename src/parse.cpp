@@ -44,7 +44,7 @@ std::vector<std::string> splitLine(std::string line)
    * The lexer is implemented on top of regular expressions!
    */
   std::vector<std::string> v;
-  std::regex re(R"(\"[^\"]*\"|[#<>=\-\w\d\.\?\!]+|[\+\/\*\%\=\(\)])");
+  std::regex re(R"(\"[^\"]*\"|[#<>=\-\w\d\.\?\!]+|[\'\+\/\*\%\=\(\)])");
   for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re);
        i != std::sregex_iterator();
        i++) {
@@ -56,8 +56,11 @@ std::vector<std::string> splitLine(std::string line)
 Object* interpretList(std::vector<std::string>::iterator& current)
 {
   Object *car, *cdr;
+  if (*current == ")") {
+    return SCM_NIL;
+  }
   car = interpretInput(current);
-  cdr = (*(++current) == ")") ? SCM_NIL : interpretList(current);
+  cdr = interpretList(++current);
   return newCons(car, cdr);
 }
 
@@ -75,6 +78,11 @@ Object* interpretInput(std::vector<std::string>::iterator& current)
     return SCM_FALSE;
   else if (*current == "(")
     return interpretList(++current);
+  else if (*current == "'") {
+    Object* quoteContents{interpretInput(++current)};
+    Object* cdr = (quoteContents == SCM_NIL) ? SCM_NIL : newCons(quoteContents, SCM_NIL);
+    return newCons(newSymbol("quote"), cdr);
+  }
   else if (isSymbol(*current))
     return newSymbol(*current);
   else
