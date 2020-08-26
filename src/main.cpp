@@ -19,6 +19,9 @@ void repl(scm::Environment& env, std::istream* streamPtr)
       // READ
       DLOG_F(INFO, "(R)epl");
       scm::Object* expression = scm::readInput(streamPtr);
+      if (expression == scm::SCM_EOF) {
+        return;
+      }
       // EVALUATE
       DLOG_F(INFO, "r(E)pl");
       scm::Object* value = scm::evaluate(env, expression);

@@ -184,6 +184,8 @@ std::string toString(Object* obj)
              toString(getUserFunctionBodyList(obj)) + ")";
     case TAG_SYNTAX:
       return "#<" + getBuiltinFuncName(obj) + '>';
+    case TAG_EOF:
+      return "finished";
     case TAG_VOID:
       return "V̱̲̠̹̪́ͨ̇̄̏ͤ́̊͌Ơ̶̸̖̮̙̘̻̘͇̘ͭ͋͛̾̇Į̶̯ͦ̃́̅͗D̵͔̯̰̞͔̖̞̣͌ͪ̓ͨ͋";
     default:

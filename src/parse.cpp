@@ -102,16 +102,20 @@ bool canBeEvaluated(const std::vector<std::string>& v)
   return openParanthesesCount == closeParanthesesCount;
 }
 
-Object* readInput(std::istream* streamPtr)
+Object* readInput(std::istream* streamPtr, bool isFile)
 {
   // setup container to keep the individual lexical elements
   std::vector<std::string> elements;
   std::string line;
 
   // read symbols until we have an evaluatable expression
-  std::cout << "> ";
+  if (!isFile) {
+    std::cout << "> ";
+  }
   do {
-    std::getline(*streamPtr, line);
+    if (!std::getline(*streamPtr, line)) {
+      return SCM_EOF;
+    }
     // TODO: input stack!
     // TODO: handle fileStream exit condition
     line = line.substr(0, line.find(';'));
