@@ -83,6 +83,9 @@ Object* interpretInput(std::vector<std::string>::iterator& current)
     Object* cdr = (quoteContents == SCM_NIL) ? SCM_NIL : newCons(quoteContents, SCM_NIL);
     return newCons(newSymbol("quote"), cdr);
   }
+  else if (*current == "exit!") {
+    return SCM_EOF;
+  }
   else if (isSymbol(*current))
     return newSymbol(*current);
   else
