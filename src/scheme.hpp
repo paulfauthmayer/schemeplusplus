@@ -132,6 +132,29 @@ std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
 
 // Macros
+
+// VOIDPTRFUNC is a function returning a void pointer
+typedef void* (*VOIDPTRFUNC)();
+// using VOIDPTRFUNC = void*();
+// using VOIDPTRFUNC = std::function<void*>;
+
+// // VOIDPTRFUNCPTR is a pointer to that
+typedef VOIDPTRFUNC* VOIDPTRFUNCPTR;
+// using VOIDPTRFUNCPTR = VOIDPTRFUNC*;
+
+// // CONTFUNC is a function returning a pointer to a function
+typedef VOIDPTRFUNCPTR(Continuation)();
+// using CONTFUNC = VOIDPTRFUNC();
+// using CONTFUNC = std::function<VOIDPTRFUNCPTR>;
+
+// // CONTFUNCPTR is a pointer to that
+typedef Continuation* ContinuationPtr;
+// using CONTFUNCPTR = CONTFUNC*;
+
+// // CONTFUNCPTR is a function returning that
+// typedef ContinuationPtr(ContinuationPtrFunc)();
+
 using ObjectVec = std::vector<Object*>;
 using ObjectStack = std::stack<Object*>;
+using FunctionStack = std::stack<Continuation*>;
 }  // namespace scm

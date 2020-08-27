@@ -4,6 +4,7 @@
 #include <loguru.hpp>
 #include "environment.hpp"
 #include "evaluate.hpp"
+#include "evaluate_trampoline.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
 #include "scheme.hpp"
@@ -24,7 +25,7 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile = true)
       }
       // EVALUATE
       DLOG_F(INFO, "r(E)pl");
-      scm::Object* value = scm::evaluate(env, expression);
+      scm::Object* value = scm::trampoline::evaluateExpression(env, expression);
       // PRINT
       DLOG_F(INFO, "re(P)l");
       if (value != scm::SCM_VOID) {
@@ -55,7 +56,7 @@ int main(int argc, char** argv)
   // run function setup for those written in scheme
   std::ifstream functionDefinitionStream;
   functionDefinitionStream.open("/Users/paul/repos/uni/dipl/src/std.scm");
-  repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
+  // repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
 
   // define input stream either as cin or from file
   std::istream* streamPtr;

@@ -164,7 +164,7 @@ std::string toString(Object* obj)
       return std::get<std::string>(obj->value);
       break;
     case TAG_NIL:
-      return "()'";
+      return "()";
       break;
     case TAG_FALSE:
       return "#f";

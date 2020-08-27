@@ -1,4 +1,4 @@
-#include "operations.hpp"
+#include "operations_trampoline.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -8,17 +8,29 @@
 #include <string>
 #include <variant>
 #include <vector>
-#include "evaluate.hpp"
+#include "evaluate_trampoline.hpp"
 #include "memory.hpp"
 #include "scheme.hpp"
+#include "trampoline.hpp"
 
 namespace scm {
+namespace trampoline {
+
+// TODO: move them to a common place
+// Macros
+// we frequently need to convert a funciton Pointer to a Continuation Pointer
+#define cont(x) (Continuation*)(x)
+
+#define t_RETURN(rVal)      \
+  {                         \
+    lastReturnValue = rVal; \
+    return popFunc();       \
+  }
 
 // HELPER FUNCTIONS
-// TODO: maybe move this out, don't require env but require evaluated Object?
-Object* toSchemeBool(Environment& env, Object* obj)
+Object* toSchemeBool(Environment& env, Object* evaluatedObject)
 {
-  Object* evaluatedObject{evaluate(env, obj)};
+  // TODO: maybe move this out, don't require env but require evaluated Object
   switch (evaluatedObject->tag) {
     case scm::TAG_INT: {
       return (getIntValue(evaluatedObject) != 0) ? SCM_TRUE : SCM_FALSE;
@@ -45,7 +57,7 @@ Object* toSchemeBool(Environment& env, Object* obj)
       break;
     }
     default: {
-      schemeThrow("evaluation not yet implemented for " + scm::toString(obj));
+      schemeThrow("evaluation not yet implemented for " + scm::toString(evaluatedObject));
       break;
     }
   }
@@ -53,33 +65,39 @@ Object* toSchemeBool(Environment& env, Object* obj)
 }
 
 // BUILTIN SYNTAX
-Object* defineSyntax(Environment& env, scm::Object* arguments)
+Continuation* defineSyntax()
 {
+  // Environment& env, scm::Object* arguments
   /**
    * Define a new variable in a given environment
    * @param env: the environment in which to define the variable
-   * @param arguments: the arguments of the operation as a cons object
+   * @param argumentCons: the arguments of the operation as a cons object
    * @return a scm::Object with the result of the operation
    */
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   Object *symbol, *value;
-  if (arguments == SCM_NIL) {
+  if (argumentCons == SCM_NIL) {
     schemeThrow("define takes exactyly 2 arguments");
   }
-  symbol = getCar(arguments);
+  symbol = getCar(argumentCons);
   if (!hasTag(symbol, TAG_SYMBOL)) {
     schemeThrow("can only define symbols");
   }
-  value = getCdr(arguments);
+  value = getCdr(argumentCons);
   if (value == SCM_NIL || getCdr(value) != SCM_NIL) {
     schemeThrow("define takes exactyly 2 arguments");
   }
-  value = evaluate(env, getCar(value));
-  define(env, symbol, value);
-  return SCM_VOID;
+  // value = evaluate(env, getCar(value));
+  value = SCM_NIL;  // TODO!
+  define(*env, symbol, value);
+  t_RETURN(SCM_NIL)
 }
 
-Object* setSyntax(Environment& env, Object* argumentCons)
+Continuation* setSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   Object *symbol, *expression, *value;
   try {
     symbol = getCar(argumentCons);
@@ -88,27 +106,30 @@ Object* setSyntax(Environment& env, Object* argumentCons)
     if (getCdr(argumentCons) != SCM_NIL) {
       schemeThrow("set requires exactly two arguments: (set! {name} {value})");
     }
-    value = evaluate(env, expression);
-    set(env, symbol, value);
+    // value = evaluate(env, expression);
+    value = SCM_NIL;  // TODO!
+    set(*env, symbol, value);
   }
   catch (std::bad_variant_access& e) {
     schemeThrow("set requires exactly two arguments: (set! {name} {value})");
   }
 
-  return value;
+  t_RETURN(value);
 }
 
-Object* quoteSyntax(Object* argumentCons)
+Continuation* quoteSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   DLOG_F(INFO, "quote arg: %s", toString(argumentCons).c_str());
-  if (hasTag(argumentCons, TAG_CONS)) {
-    return getCar(argumentCons);
-  }
-  return argumentCons;
+  Object* quoted = (hasTag(argumentCons, TAG_CONS)) ? getCar(argumentCons) : argumentCons;
+  t_RETURN(quoted);
 }
 
-Object* ifSyntax(Environment& env, Object* argumentCons)
+Continuation* ifSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   Object *condition, *trueExpression, *falseExpression;
   try {
     condition = getCar(argumentCons);
@@ -123,23 +144,30 @@ Object* ifSyntax(Environment& env, Object* argumentCons)
   catch (std::bad_variant_access& e) {
     schemeThrow("if requires 3 arguments: (if {condition} {true} {false})");
   }
-  return (toSchemeBool(env, condition) == SCM_TRUE) ? evaluate(env, trueExpression)
-                                                    : evaluate(env, falseExpression);
+  // TODO TRAMPOLINE
+  // return (toSchemeBool(*env, condition) == SCM_TRUE) ? evaluate(env, trueExpression)
+  //                                                    : evaluate(env, falseExpression);
+  t_RETURN(SCM_NIL);  // TODO!
 }
 
-Object* beginSyntax(Environment& env, Object* argumentCons)
+Continuation* beginSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   Object *currentExpression, *lastValue{SCM_NIL};
   while (argumentCons != SCM_NIL) {
     currentExpression = getCar(argumentCons);
     argumentCons = getCdr(argumentCons);
-    lastValue = evaluate(env, currentExpression);
+    // lastValue = evaluate(env, currentExpression);
+    lastValue = SCM_NIL;
   };
-  return lastValue;
+  t_RETURN(lastValue);
 }
 
-Object* lambdaSyntax(Environment& env, Object* argumentCons)
+Continuation* lambdaSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
   Object *argList, *bodyList;
   try {
     argList = getCar(argumentCons);
@@ -154,12 +182,12 @@ Object* lambdaSyntax(Environment& env, Object* argumentCons)
   catch (std::bad_variant_access& e) {
     schemeThrow("lambda requires exactly two arguments: (lambda {argument} {body})");
   }
-  return newUserFunction(argList, bodyList, env);
+  t_RETURN(newUserFunction(argList, bodyList, *env));
 }
 
 // BUILTIN FUNCTIONS
 
-Object* addFunction(ObjectStack& stack, int nArgs)
+Continuation* addFunction()
 {
   /**
    * Function that handles the addition or concatenation of multiple scm::Objects
@@ -167,12 +195,12 @@ Object* addFunction(ObjectStack& stack, int nArgs)
    * @param nArgs: how many arguments the function should take
    * @return a new scm::Object* with the result of the computation
    */
-
+  int nArgs{popArg<int>()};
   // get all arguments necessary and check for type validity
   if (nArgs <= 0) {
     schemeThrow("expected at least 1 argument");
   }
-  auto arguments = popN(stack, nArgs);
+  auto arguments = popArgs<Object*>(nArgs);
   auto isValidType = [](Object* obj) { return isOneOf(obj, {TAG_INT, TAG_FLOAT, TAG_STRING}); };
   if (!std::all_of(arguments.begin(), arguments.end(), isValidType)) {
     schemeThrow("invalid types for add function!\n");
@@ -196,7 +224,7 @@ Object* addFunction(ObjectStack& stack, int nArgs)
       }
     };
     std::string result = std::reduce(arguments.begin(), arguments.end(), std::string{}, lambda);
-    return newString(result);
+    t_RETURN(newString(result));
   }
 
   else if (std::any_of(arguments.begin(), arguments.end(), isFloatingPoint)) {
@@ -209,32 +237,32 @@ Object* addFunction(ObjectStack& stack, int nArgs)
       }
     };
     double result = std::reduce(arguments.begin(), arguments.end(), double(0.0), lambda);
-    return newFloat(result);
+    t_RETURN(newFloat(result));
   }
 
   else {
     auto lambda = [](int a, Object* b) { return getIntValue(b) + a; };
     double result = std::reduce(arguments.begin(), arguments.end(), 0, lambda);
-    return newInteger(result);
+    t_RETURN(newInteger(result));
   }
 }
 
-Object* subFunction(ObjectStack& stack, int nArgs)
+Continuation* subFunction()
 {
-  // TODO: handle floats as int.int
-  auto subtrahends = popN(stack, nArgs - 1);
+  int nArgs{popArg<int>()};
+  auto subtrahends = popArgs<Object*>(nArgs - 1);
   int intSubtrahend{};
   double doubleSubtrahend;
   // TODO: this is a really ugly hack, fix this! it works, but gives the option for floating point
   // errors
-  Object* minuendObj = pop(stack);
+  Object* minuendObj = popArg<Object*>();
   double minuend = hasTag(minuendObj, TAG_FLOAT) ? getFloatValue(minuendObj)
                                                  : static_cast<double>(getIntValue(minuendObj));
 
   if (subtrahends.size() == 0) {
     if (hasTag(minuendObj, TAG_FLOAT))
-      return newFloat(-getFloatValue(minuendObj));
-    return newInteger(-getIntValue(minuendObj));
+      t_RETURN(newFloat(-getFloatValue(minuendObj)));
+    t_RETURN(newInteger(-getIntValue(minuendObj)));
   }
   else if (hasTag(minuendObj, TAG_FLOAT) ||
            std::any_of(subtrahends.begin(), subtrahends.end(), isFloatingPoint)) {
@@ -245,18 +273,19 @@ Object* subFunction(ObjectStack& stack, int nArgs)
       return a + getFloatValue(b);
     };
     doubleSubtrahend = std::reduce(subtrahends.begin(), subtrahends.end(), double(0.0), lambda);
-    return newFloat(minuend - doubleSubtrahend);
+    t_RETURN(newFloat(minuend - doubleSubtrahend));
   }
   else {
     auto lambda = [](int a, Object* b) { return a + getIntValue(b); };
     intSubtrahend = std::reduce(subtrahends.begin(), subtrahends.end(), int(0), lambda);
-    return newInteger(static_cast<int>(minuend) - intSubtrahend);
+    t_RETURN(newInteger(static_cast<int>(minuend) - intSubtrahend));
   }
 }
 
-Object* multFunction(ObjectStack& stack, int nArgs)
+Continuation* multFunction()
 {
-  ObjectVec arguments{popN(stack, nArgs)};
+  int nArgs{popArg<int>()};
+  ObjectVec arguments{popArgs<Object*>(nArgs)};
   auto isValidType = [](Object* obj) { return isOneOf(obj, {TAG_INT, TAG_FLOAT}); };
   if (!std::all_of(arguments.begin(), arguments.end(), isValidType)) {
     schemeThrow("invalid type for multiplication");
@@ -268,55 +297,62 @@ Object* multFunction(ObjectStack& stack, int nArgs)
       }
       return a * getFloatValue(b);
     };
-    return newFloat(std::reduce(arguments.begin(), arguments.end(), double(1), lambda));
+    t_RETURN(newFloat(std::reduce(arguments.begin(), arguments.end(), double(1), lambda)));
   }
   else {
     auto lambda = [](int a, Object* b) { return a * getIntValue(b); };
-    return newInteger(std::reduce(arguments.begin(), arguments.end(), int{1}, lambda));
+    t_RETURN(newInteger(std::reduce(arguments.begin(), arguments.end(), int{1}, lambda)));
   }
 }
 
-Object* divFunction(ObjectStack& stack, int nArgs)
+// TODO: throw out, implement in scheme
+Continuation* divFunction()
 {
-  Object* divisor{multFunction(stack, nArgs - 1)};
-  Object* dividend{pop(stack)};
+  int nArgs{popArg<int>()};
+  // Object* divisor{multFunction(stack, nArgs - 1)};
+  // Object* dividend{popArg<Object*>()};
 
-  if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
-    return newFloat(getFloatValue(dividend) / getFloatValue(divisor));
-  }
-  else if (isFloatingPoint(dividend)) {
-    return newFloat(getFloatValue(dividend) / static_cast<double>(getIntValue(divisor)));
-  }
-  else if (isFloatingPoint(divisor)) {
-    return newFloat(static_cast<double>(getIntValue(dividend)) / getFloatValue(divisor));
-  }
-  else {
-    return newFloat(static_cast<double>(getIntValue(dividend)) /
-                    static_cast<double>(getIntValue(divisor)));
-  }
+  // if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
+  //   t_RETURN(newFloat(getFloatValue(dividend) / getFloatValue(divisor)));
+  // }
+  // else if (isFloatingPoint(dividend)) {
+  //   t_RETURN(newFloat(getFloatValue(dividend) / static_cast<double>(getIntValue(divisor))));
+  // }
+  // else if (isFloatingPoint(divisor)) {
+  //   t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) / getFloatValue(divisor)));
+  // }
+  // else {
+  //   t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) /
+  //                     static_cast<double>(getIntValue(divisor))));
+  // }
+  t_RETURN(NULL);
 }
-Object* modFunction(ObjectStack& stack, int nArgs)
+
+Continuation* modFunction()
 {
+  int nArgs{popArg<int>()};
   if (nArgs != 2) {
     schemeThrow("modulo expects excactly 2 arguments");
   }
-  Object* divisor{pop(stack)};
-  Object* dividend{pop(stack)};
+  Object* divisor{popArg<Object*>()};
+  Object* dividend{popArg<Object*>()};
   if (!isNumeric(divisor) || !isNumeric(dividend)) {
     schemeThrow("modulo only works with numbers");
   }
 
   if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
-    return newFloat(std::fmod(getFloatValue(dividend), getFloatValue(divisor)));
+    t_RETURN(newFloat(std::fmod(getFloatValue(dividend), getFloatValue(divisor))));
   }
   else if (isFloatingPoint(dividend)) {
-    return newFloat(std::fmod(getFloatValue(dividend), static_cast<double>(getIntValue(divisor))));
+    t_RETURN(
+        newFloat(std::fmod(getFloatValue(dividend), static_cast<double>(getIntValue(divisor)))));
   }
   else if (isFloatingPoint(divisor)) {
-    return newFloat(std::fmod(static_cast<double>(getIntValue(dividend)), getFloatValue(divisor)));
+    t_RETURN(
+        newFloat(std::fmod(static_cast<double>(getIntValue(dividend)), getFloatValue(divisor))));
   }
   else {
-    return newInteger(getIntValue(dividend) % getIntValue(divisor));
+    t_RETURN(newInteger(getIntValue(dividend) % getIntValue(divisor)));
   }
 }
 
@@ -328,24 +364,25 @@ Object* modFunction(ObjectStack& stack, int nArgs)
  * @param nArgs the number of arguments
  * @return the return value of the called function
  */
-Object* applyFunction(ObjectStack& stack, int nArgs)
+Object* applyFunction()
 {
   Object *function, *argumentCons;
   return SCM_NIL;
 }
 
-Object* eqFunction(ObjectStack& stack, int nArgs)
+Continuation* eqFunction()
 {
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
-  return (a == b) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* b{popArg<Object*>()};
+  Object* a{popArg<Object*>()};
+  t_RETURN((a == b) ? SCM_TRUE : SCM_FALSE);
 }
 
 // TODO: can this be done?
 // Object* compareTwoNumbers(ObjectStack& stack, int nArgs, std::function comparison)
 // {
-//   Object* a{pop(stack)};
-//   Object* b{pop(stack)};
+//   Object* a{popArg<Object*>()};
+//   Object* b{popArg<Object*>()};
 //   if (!isNumeric(a) || !isNumeric(b)) {
 //     schemeThrow("= only works with numbers");
 //   }
@@ -363,187 +400,206 @@ Object* eqFunction(ObjectStack& stack, int nArgs)
 //   }
 // }
 
-Object* equalNumberFunction(ObjectStack& stack, int nArgs)
+Continuation* equalNumberFunction()
 {
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* b{popArg<Object*>()};
+  Object* a{popArg<Object*>()};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
   if (isFloatingPoint(a) && isFloatingPoint(b)) {
-    return (getFloatValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(a)) {
-    return (getFloatValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(b)) {
-    return (getIntValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) == getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else {
-    return (getIntValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) == getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
 }
 
-Object* equalFunction(ObjectStack& stack, int nArgs)
-{
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
-  if (isNumeric(a) && isNumeric(b)) {
-    push(stack, {a, b});
-    return equalNumberFunction(stack, nArgs);
-  }
-  else if (getTag(a) != getTag(b)) {
-    return SCM_FALSE;
-  }
-  else if (isString(a) && isString(b)) {
-    return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
-  }
-  else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
-    schemeThrow("cons comparison not implemented yet!");
-  }
-  else {
-    schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
-  }
-}
+//  TODO: implment this in scheme!
+// Object* equalFunction(ObjectStack& stack, int nArgs)
+// {
+//   Object* b{popArg<Object*>()};
+//   Object* a{popArg<Object*>()};
+//   if (isNumeric(a) && isNumeric(b)) {
+//     push(stack, {a, b});
+//     return equalNumberFunction(stack, nArgs);
+//   }
+//   else if (getTag(a) != getTag(b)) {
+//     return SCM_FALSE;
+//   }
+//   else if (isString(a) && isString(b)) {
+//     return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
+//   }
+//   else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
+//     schemeThrow("cons comparison not implemented yet!");
+//   }
+//   else {
+//     schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
+//   }
+// }
 
-Object* greaterThanFunction(ObjectStack& stack, int nArgs)
+Continuation* greaterThanFunction()
 {
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* b{popArg<Object*>()};
+  Object* a{popArg<Object*>()};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
   if (isFloatingPoint(a) && isFloatingPoint(b)) {
-    return (getFloatValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(a)) {
-    return (getFloatValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(b)) {
-    return (getIntValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) > getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else {
-    return (getIntValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) > getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
 }
 
-Object* lesserThanFunction(ObjectStack& stack, int nArgs)
+Continuation* lesserThanFunction()
 {
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* b{popArg<Object*>()};
+  Object* a{popArg<Object*>()};
   if (!isNumeric(a) || !isNumeric(b)) {
     schemeThrow("= only works with numbers");
   }
   if (isFloatingPoint(a) && isFloatingPoint(b)) {
-    return (getFloatValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(a)) {
-    return (getFloatValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getFloatValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else if (isFloatingPoint(b)) {
-    return (getIntValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) < getFloatValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
   else {
-    return (getIntValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE;
+    t_RETURN((getIntValue(a) < getIntValue(b)) ? SCM_TRUE : SCM_FALSE);
   }
 }
 
-Object* consFunction(ObjectStack& stack, int nArgs)
+Continuation* consFunction()
 {
-  Object* cdr{pop(stack)};
-  Object* car{pop(stack)};
-  return newCons(car, cdr);
+  int nArgs{popArg<int>()};
+  Object* cdr{popArg<Object*>()};
+  Object* car{popArg<Object*>()};
+  t_RETURN(newCons(car, cdr));
 }
 
-Object* carFunction(ObjectStack& stack, int nArgs)
+Continuation* carFunction()
 {
-  Object* cons{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* cons{popArg<Object*>()};
   if (!hasTag(cons, TAG_CONS)) {
     schemeThrow("trying to get car value from non-cons object");
   }
-  return getCar(cons);
+  t_RETURN(getCar(cons));
 }
 
-Object* cdrFunction(ObjectStack& stack, int nArgs)
+Continuation* cdrFunction()
 {
-  Object* cons{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* cons{popArg<Object*>()};
   if (!hasTag(cons, TAG_CONS)) {
     schemeThrow("trying to get cdr value from non-cons object");
   }
-  return getCdr(cons);
+  t_RETURN(getCdr(cons));
 }
 
-Object* listFunction(ObjectStack& stack, int nArgs)
+Continuation* listFunction()
 {
+  int nArgs{popArg<int>()};
   Object* rest;
   while (nArgs--) {
-    Object* currentArgument{pop(stack)};
+    Object* currentArgument{popArg<Object*>()};
     rest = newCons(currentArgument, rest);
   }
-  return rest;
+  t_RETURN(rest);
 }
 
-Object* displayFunction(ObjectStack& stack, int nArgs)
+Continuation* displayFunction()
 {
-  ObjectVec arguments{popN(stack, nArgs)};
+  int nArgs{popArg<int>()};
+  ObjectVec arguments{popArgs<Object*>(nArgs)};
   for (auto argument{arguments.rbegin()}; argument != arguments.rend(); argument++) {
     std::cout << toString(*argument) << " ";
   }
   std::cout << '\n';
-  return SCM_VOID;
+  t_RETURN(SCM_VOID);
 }
 
-Object* functionBodyFunction(ObjectStack& stack, int nArgs)
+Continuation* functionBodyFunction()
 {
-  Object* obj{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
   if (!hasTag(obj, TAG_FUNC_USER)) {
     schemeThrow("function body is not a lambda");
   }
-  return getUserFunctionBodyList(obj);
+  t_RETURN(getUserFunctionBodyList(obj));
 }
 
-Object* functionArglistFunction(ObjectStack& stack, int nArgs)
+Continuation* functionArglistFunction()
 {
-  Object* obj{pop(stack)};
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
   if (!hasTag(obj, TAG_FUNC_USER)) {
     schemeThrow("function arglist is not a lambda");
   }
-  return getUserFunctionArgList(obj);
+  t_RETURN(getUserFunctionArgList(obj));
 }
 
-Object* isStringFunction(ObjectStack& stack, int nArgs)
+Continuation* isStringFunction()
 {
-  Object* obj{pop(stack)};
-  return (isString(obj)) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((isString(obj)) ? SCM_TRUE : SCM_FALSE);
 }
 
-Object* isNumberFunction(ObjectStack& stack, int nArgs)
+Continuation* isNumberFunction()
 {
-  Object* obj{pop(stack)};
-  return (isNumeric(obj)) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((isNumeric(obj)) ? SCM_TRUE : SCM_FALSE);
 }
 
-Object* isConsFunction(ObjectStack& stack, int nArgs)
+Continuation* isConsFunction()
 {
-  Object* obj{pop(stack)};
-  return (hasTag(obj, TAG_CONS)) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((hasTag(obj, TAG_CONS)) ? SCM_TRUE : SCM_FALSE);
 }
 
-Object* isBuiltinFunctionFunction(ObjectStack& stack, int nArgs)
+Continuation* isBuiltinFunctionFunction()
 {
-  Object* obj{pop(stack)};
-  return (hasTag(obj, TAG_FUNC_BUILTIN)) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((hasTag(obj, TAG_FUNC_BUILTIN)) ? SCM_TRUE : SCM_FALSE);
 }
 
-Object* isUserFunctionFunction(ObjectStack& stack, int nArgs)
+Continuation* isUserFunctionFunction()
 {
-  Object* obj{pop(stack)};
-  return (hasTag(obj, TAG_FUNC_USER)) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((hasTag(obj, TAG_FUNC_USER)) ? SCM_TRUE : SCM_FALSE);
 }
 
-Object* isBoolFunction(ObjectStack& stack, int nArgs)
+Continuation* isBoolFunction()
 {
-  Object* obj{pop(stack)};
-  return (isOneOf(obj, {TAG_TRUE, TAG_FALSE})) ? SCM_TRUE : SCM_FALSE;
+  int nArgs{popArg<int>()};
+  Object* obj{popArg<Object*>()};
+  t_RETURN((isOneOf(obj, {TAG_TRUE, TAG_FALSE})) ? SCM_TRUE : SCM_FALSE);
 }
+
+}  // namespace trampoline
 }  // namespace scm
