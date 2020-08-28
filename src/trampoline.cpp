@@ -35,13 +35,47 @@ Continuation* tCall(Continuation* nextFunc,
   return nextFunc;
 }
 
+void printArg(ArgumentTypeVariant arg, std::string action = "")
+{
+  if (std::holds_alternative<Environment*>(arg)) {
+    DLOG_F(WARNING, "%s arg: env", action.c_str());
+  }
+  else if (std::holds_alternative<Object*>(arg)) {
+    DLOG_F(WARNING, "%s object %s", action.c_str(), toString(std::get<Object*>(arg)).c_str());
+  }
+  else if (std::holds_alternative<int>(arg)) {
+    DLOG_F(WARNING, "%s int %d", action.c_str(), std::get<int>(arg));
+  }
+  else if (std::holds_alternative<std::size_t>(arg)) {
+    DLOG_F(WARNING, "%s size_t %d", action.c_str(), std::get<std::size_t>(arg));
+  }
+}
+
+void printArgStack()
+{
+  std::stack<ArgumentTypeVariant> placeholder{};
+  DLOG_F(WARNING, "argstack - %d arguments", argumentStack.size());
+  while (argumentStack.size()) {
+    printArg(argumentStack.top());
+    placeholder.push(argumentStack.top());
+    argumentStack.pop();
+  }
+  while (placeholder.size()) {
+    argumentStack.push(placeholder.top());
+    placeholder.pop();
+  }
+}
+
 /**
  * Pushes the passed argument to the top of the argument stack
  * @param arg the argument to be pushed onto the stack
  */
 inline void pushArg(ArgumentTypeVariant arg)
 {
+  printArg(arg, "pushing");
+  std::cout << "stacksize: " << argumentStack.size();
   argumentStack.push(arg);
+  std::cout << " -> " << argumentStack.size() << "\n";
 }
 
 /**
@@ -51,11 +85,8 @@ inline void pushArg(ArgumentTypeVariant arg)
  */
 void pushArgs(std::vector<ArgumentTypeVariant> arguments)
 {
-  std::cout << "push " << arguments.size() << "\n";
   for (auto i = arguments.rbegin(); i != arguments.rend(); i++) {
-    std::cout << "stacksize: " << argumentStack.size();
     pushArg(*i);
-    std::cout << " -> " << argumentStack.size() << "\n";
   }
 }
 

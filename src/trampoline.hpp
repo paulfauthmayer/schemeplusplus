@@ -35,6 +35,8 @@ void pushArg(ArgumentTypeVariant arg);
 void pushArgs(std::vector<ArgumentTypeVariant> arguments);
 Continuation* popFunc();
 void pushFunc(Continuation* nextFunc);
+void printArg(ArgumentTypeVariant arg, std::string action);
+void printArgStack();
 
 /**
  * Pops and returns the topmost element of the argument stack. Implemented because
@@ -45,8 +47,9 @@ template <typename T>
 T popArg()
 {
   if (argumentStack.empty()) {
-    schemeThrow("trying to pop from empty stack");
+    schemeThrow("trying to pop argument from empty stack");
   }
+  printArg(argumentStack.top(), "popping");
   std::cout << "stacksize: " << argumentStack.size();
   T arg{std::get<T>(argumentStack.top())};
   argumentStack.pop();
@@ -64,6 +67,7 @@ std::vector<T> popArgs(int n)
 {
   DLOG_F(INFO, "popping %d values from stack", n);
   if (argumentStack.size() < n) {
+    printArgStack();
     schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
   }
   std::vector<T> values;

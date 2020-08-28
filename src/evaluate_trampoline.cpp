@@ -56,21 +56,21 @@ Object* evaluateExpression(Environment& env, Object* expression)
 }
 
 // evaluate functions and syntax
-static int evaluateArguments(Environment& env, Object* arguments)
-{
-  /**
-   * Evaluates a list of arguments and stores them on the argument stack
-   */
-  DLOG_F(WARNING, "evaluate arguments: %s", toString(arguments).c_str());
-  std::size_t initialSize{argumentStack.size()};
-  while (arguments != SCM_NIL) {
-    auto currentArguement = getCar(arguments);
-    // argumentStack.push(evaluate(env, currentArguement));
-    pushArg(SCM_NIL);  // TODO!
-    arguments = getCdr(arguments);
-  }
-  return argumentStack.size() - initialSize;
-}
+// static int evaluateArguments(Environment& env, Object* arguments)
+// {
+//   /**
+//    * Evaluates a list of arguments and stores them on the argument stack
+//    */
+//   DLOG_F(WARNING, "evaluate arguments: %s", toString(arguments).c_str());
+//   std::size_t initialSize{argumentStack.size()};
+//   while (arguments != SCM_NIL) {
+//     auto currentArguement = getCar(arguments);
+//     // argumentStack.push(evaluate(env, currentArguement));
+//     pushArg(SCM_NIL);  // TODO!
+//     arguments = getCdr(arguments);
+//   }
+//   return argumentStack.size() - initialSize;
+// }
 
 // forward declaration of the following functions parts
 static Continuation* evaluateArguments_Part1();
@@ -79,7 +79,7 @@ static Continuation* evaluateArguments_Part1();
  * stores them in the argument stack.
  * @return the next step in our trampoline
  */
-static Continuation* evaluateArguments()  // _Part0
+static Continuation* evaluateArguments()
 {
   DLOG_F(WARNING, "evaluate arguments new");
   // get arguments from stack
@@ -104,7 +104,8 @@ static Continuation* evaluateArguments()  // _Part0
     return tCall(cont(evaluate), cont(evaluateArguments_Part1), {env, currentArgument});
   }
   else {
-    return (Continuation*)evaluate;
+    // todo: do we need to push stacksizeatstart here?
+    return popFunc();
   }
 };
 
@@ -117,24 +118,39 @@ static Continuation* evaluateArguments_Part1()
   Object* argumentCons = popArg<Object*>();
   std::size_t stackSizeAtStart = popArg<std::size_t>();
 
-  // continue where we left off
+  // get evaluated object and store on stack for later functions
+  pushArg(lastReturnValue);
+
+  // "loop" with next argument or return
+  argumentCons = getCdr(argumentCons);
+  if (argumentCons != SCM_NIL) {
+    Object* nextArg{getCar(argumentCons)};
+    // arguments for evaluateArguments_Part1
+    pushArgs({env, operation, argumentCons, stackSizeAtStart});
+    // call evaluation for next argument
+    return tCall(cont(evaluate), cont(evaluateArguments_Part1), {env, nextArg});
+  }
+  else {
+    pushArgs({env, operation, stackSizeAtStart});
+    return popFunc();
+  }
 };
 
 static Continuation* evaluateBuiltinFunction()
 {
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
-  Object* arguments{popArg<Object*>()};
+  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+  printArgStack();
   DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
-  int nArgs = evaluateArguments(*env, arguments);
   if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
     schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
                 std::to_string(getBuiltinFuncNArgs(function)) + " arguments, got " +
                 std::to_string(nArgs) + '\n');
   }
-  pushArg(nArgs);
   // }
   // static Continuation* evaluateBuiltinFunction_Part1(){
+  pushArg(nArgs);
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
       return addFunction();
@@ -330,16 +346,15 @@ static Continuation* evaluate_Part1()
   switch (evaluatedOperation->tag) {
     case TAG_FUNC_BUILTIN:
       pushArgs({env, evaluatedOperation, argumentCons});
-      pushFunc(cont(evaluate_Part1));
-      return cont(evaluateBuiltinFunction);
+      pushFunc(cont(evaluateBuiltinFunction));
+      return cont(evaluateArguments);
     case TAG_SYNTAX:
       pushArgs({env, evaluatedOperation, argumentCons});
-      pushFunc(cont(evaluate_Part1));
       return cont(evaluateSyntax);
     case TAG_FUNC_USER:
       pushArgs({env, evaluatedOperation, argumentCons});
-      pushFunc(cont(evaluate_Part1));
-      return cont(evaluateUserDefinedFunction);
+      pushFunc(cont(evaluateUserDefinedFunction));
+      return cont(evaluateArguments);
     default:
       schemeThrow(toString(evaluatedOperation) + " doesn't exist");
       break;

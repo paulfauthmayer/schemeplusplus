@@ -196,6 +196,7 @@ Continuation* addFunction()
    * @return a new scm::Object* with the result of the computation
    */
   int nArgs{popArg<int>()};
+  DLOG_F(WARNING, "nArgs = %d", nArgs);
   // get all arguments necessary and check for type validity
   if (nArgs <= 0) {
     schemeThrow("expected at least 1 argument");
