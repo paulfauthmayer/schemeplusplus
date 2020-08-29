@@ -59,19 +59,33 @@ Continuation* defineSyntax()
     schemeThrow("define takes exactyly 2 arguments");
   }
   symbol = getCar(argumentCons);
-  if (!hasTag(symbol, TAG_SYMBOL)) {
-    schemeThrow("can only define symbols");
-  }
-  value = getCdr(argumentCons);
-  if (value == SCM_NIL || getCdr(value) != SCM_NIL) {
-    schemeThrow("define takes exactyly 2 arguments");
+  if (!isOneOf(symbol, {TAG_SYMBOL, TAG_CONS})) {
+    schemeThrow("can only define symbols or functions");
   }
 
-  // push arguments required for next part
-  pushArgs({env, symbol});
+  // shorthand lambda definition!
+  // if symbol is a cons, treat it like a lambda declaration
+  // (funcname var1 var2 ...) (value)
+  if (hasTag(symbol, TAG_CONS)) {
+    // push arguments required for next part
+    pushArgs({env, getCar(symbol)});
+    // call lambda then continue with next part
+    return tCall(cont(lambdaSyntax),
+                 cont(defineSyntax_Part1),
+                 {env, newCons(getCdr(symbol), getCdr(argumentCons))});
+  }
+  // in the case of a single symbol, we just define the variable
+  else {
+    value = getCdr(argumentCons);
+    if (value == SCM_NIL || getCdr(value) != SCM_NIL) {
+      schemeThrow("define takes exactyly 2 arguments");
+    }
+    // push arguments required for next part
+    pushArgs({env, symbol});
 
-  // call evaluate then continue with next part
-  return tCall(cont(evaluate), cont(defineSyntax_Part1), {env, getCar(value)});
+    // call evaluate then continue with next part
+    return tCall(cont(evaluate), cont(defineSyntax_Part1), {env, getCar(value)});
+  }
 }
 
 static Continuation* defineSyntax_Part1()
