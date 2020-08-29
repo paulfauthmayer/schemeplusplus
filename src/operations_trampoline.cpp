@@ -618,7 +618,7 @@ Continuation* listFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: listFunction");
   int nArgs{popArg<int>()};
-  Object* rest;
+  Object* rest = SCM_NIL;
   while (nArgs--) {
     Object* currentArgument{popArg<Object*>()};
     rest = newCons(currentArgument, rest);
