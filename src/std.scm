@@ -46,7 +46,7 @@
 
 (define <=
     (lambda (x y)
-        (not (< x y))))
+        (not (> x y))))
 
 (define max
     (lambda (x y)
@@ -81,4 +81,9 @@
     (lambda (n)
         (if (= n 0)
             0
-            (+ n (sum-to1 (- n 1))))))
+            (+ n (sum-below (- n 1))))))
+
+(define fib (lambda (n)
+  (if (<= n 2)
+      1
+      (+ (fib (- n 1)) (fib (- n 2))))))
