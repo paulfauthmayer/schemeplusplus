@@ -100,6 +100,10 @@ Object* setSyntax(Environment& env, Object* argumentCons)
 
 Object* quoteSyntax(Object* argumentCons)
 {
+  DLOG_F(INFO, "quote arg: %s", toString(argumentCons).c_str());
+  if (hasTag(argumentCons, TAG_CONS)) {
+    return getCar(argumentCons);
+  }
   return argumentCons;
 }
 
