@@ -32,10 +32,14 @@ namespace trampoline {
  */
 Object* trampoline(Continuation* startFunction)
 {
+  DLOG_F(ERROR, "trampoline");
+  DLOG_F(WARNING, "getNextFunction");
   Continuation* nextFunction{startFunction};
   pushFunc(NULL);
-  DLOG_F(WARNING, "trampoline");
   while (nextFunction != NULL) {
+    DLOG_F(ERROR, "trampoline loop");
+    DLOG_F(WARNING, "getNextFunction");
+    DLOG_F(WARNING, "funcStack at %d", functionStack.size());
     nextFunction = (Continuation*)(*nextFunction)();
   }
   return lastReturnValue;
@@ -81,7 +85,7 @@ static Continuation* evaluateArguments_Part1();
  */
 static Continuation* evaluateArguments()
 {
-  DLOG_F(WARNING, "evaluate arguments new");
+  DLOG_F(ERROR, "evaluate arguments");
   // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* operation{popArg<Object*>()};
@@ -230,28 +234,27 @@ static Continuation* evaluateBuiltinFunction()
   }
 }
 
-static Object* evaluateUserDefinedFunction(Environment& env,
-                                           scm::Object* function,
-                                           scm::Object* argumentCons)
+static Continuation* evaluateUserDefinedFunction()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* function{popArg<Object*>()};
+  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+  ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
+
   DLOG_F(INFO, "evaluate user defined function");
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
   Object* lastBodyResult;
-  Environment funcEnv{getUserFunctionParentEnv(function)};
+  Environment* funcEnv{new Environment(getUserFunctionParentEnv(function))};
 
-  // int nArgs = evaluateArguments(argumentCons);
-  // ObjectVec evaluatedArguments{popN(argumentStack, nArgs)};
-  int nArgs = 0;  // TODO!!!!!
-  ObjectVec evaluatedArguments{};
   while (functionArguments != SCM_NIL) {
     Object* argName{getCar(functionArguments)};
     Object* argValue{evaluatedArguments[--nArgs]};
-    define(funcEnv, argName, argValue);
+    define(*funcEnv, argName, argValue);
     functionArguments = getCdr(functionArguments);
   }
 
-  return NULL;  // TODO! evaluate(funcEnv, functionBody);
+  return tCall(cont(evaluate), {funcEnv, functionBody});
 }
 
 static Continuation* evaluateSyntax()

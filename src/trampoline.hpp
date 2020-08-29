@@ -50,11 +50,9 @@ T popArg()
   if (argumentStack.empty()) {
     schemeThrow("trying to pop argument from empty stack");
   }
-  printArg(argumentStack.top(), "popping");
-  std::cout << "stacksize: " << argumentStack.size();
+  printArg(argumentStack.top(), "popping into " + std::string(typeid(T).name()) + " :");
   T arg{std::get<T>(argumentStack.top())};
   argumentStack.pop();
-  std::cout << " -> " << argumentStack.size() << "\n";
   return arg;
 }
 

@@ -51,6 +51,7 @@ Continuation* defineSyntax()
    * @param argumentCons: the arguments of the operation as a cons object
    * @return a scm::Object with the result of the operation
    */
+  DLOG_F(ERROR, "defineSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   Object *symbol, *value;
@@ -75,6 +76,7 @@ Continuation* defineSyntax()
 
 static Continuation* defineSyntax_Part1()
 {
+  DLOG_F(ERROR, "defineSyntax Part1");
   Environment* env{popArg<Environment*>()};
   Object* symbol{popArg<Object*>()};
   Object* value{lastReturnValue};
@@ -85,6 +87,7 @@ static Continuation* defineSyntax_Part1()
 
 Continuation* setSyntax()
 {
+  DLOG_F(ERROR, "setSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
 
@@ -110,6 +113,7 @@ Continuation* setSyntax()
 
 static Continuation* setSyntax_Part1()
 {
+  DLOG_F(ERROR, "setSyntax_Part1");
   Environment* env{popArg<Environment*>()};
   Object* symbol{popArg<Object*>()};
   Object* value{lastReturnValue};
@@ -120,6 +124,7 @@ static Continuation* setSyntax_Part1()
 
 Continuation* quoteSyntax()
 {
+  DLOG_F(ERROR, "quoteSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   DLOG_F(INFO, "quote arg: %s", toString(argumentCons).c_str());
@@ -129,6 +134,7 @@ Continuation* quoteSyntax()
 
 Continuation* ifSyntax()
 {
+  DLOG_F(ERROR, "ifSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   Object *condition, *trueExpression, *falseExpression;
@@ -153,6 +159,7 @@ Continuation* ifSyntax()
 }
 static Continuation* ifSyntax_Part1()
 {
+  DLOG_F(ERROR, "ifSyntax Part1");
   Environment* env{popArg<Environment*>()};
   Object* trueExpression{popArg<Object*>()};
   Object* falseExpression{popArg<Object*>()};
@@ -192,11 +199,13 @@ static Continuation* ifSyntax_Part1()
     }
   }
   Object* expression{(conditionAsBool == SCM_TRUE) ? trueExpression : falseExpression};
+  DLOG_F(WARNING, "picked expression %s", toString(expression).c_str());
   return tCall(cont(evaluate), {env, expression});
 }
 
 Continuation* beginSyntax()
 {
+  DLOG_F(ERROR, "beginSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   if (argumentCons == SCM_NIL) {
@@ -209,6 +218,7 @@ Continuation* beginSyntax()
 
 static Continuation* beginSyntax_Part1()
 {
+  DLOG_F(ERROR, "beginSyntax Part1");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
 
@@ -228,6 +238,7 @@ static Continuation* beginSyntax_Part1()
 
 Continuation* lambdaSyntax()
 {
+  DLOG_F(ERROR, "lambdaSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   Object *argList, *bodyList;
@@ -257,6 +268,7 @@ Continuation* addFunction()
    * @param nArgs: how many arguments the function should take
    * @return a new scm::Object* with the result of the computation
    */
+  DLOG_F(ERROR, "addFunction");
   int nArgs{popArg<int>()};
   DLOG_F(WARNING, "nArgs = %d", nArgs);
   // get all arguments necessary and check for type validity
@@ -312,6 +324,7 @@ Continuation* addFunction()
 
 Continuation* subFunction()
 {
+  DLOG_F(ERROR, "subFunction");
   int nArgs{popArg<int>()};
   auto subtrahends = popArgs<Object*>(nArgs - 1);
   int intSubtrahend{};
@@ -347,6 +360,7 @@ Continuation* subFunction()
 
 Continuation* multFunction()
 {
+  DLOG_F(ERROR, "multFunction");
   int nArgs{popArg<int>()};
   ObjectVec arguments{popArgs<Object*>(nArgs)};
   auto isValidType = [](Object* obj) { return isOneOf(obj, {TAG_INT, TAG_FLOAT}); };
@@ -371,6 +385,7 @@ Continuation* multFunction()
 // TODO: throw out, implement in scheme
 Continuation* divFunction()
 {
+  DLOG_F(ERROR, "divFunction");
   schemeThrow("division is currently not implemented, write it yourself!");
   int nArgs{popArg<int>()};
   ObjectVec arguments{popArgs<Object*>(nArgs)};
@@ -395,6 +410,7 @@ Continuation* divFunction()
 
 Continuation* modFunction()
 {
+  DLOG_F(ERROR, "modFunction");
   int nArgs{popArg<int>()};
   if (nArgs != 2) {
     schemeThrow("modulo expects excactly 2 arguments");
@@ -437,6 +453,7 @@ Object* applyFunction()
 
 Continuation* eqFunction()
 {
+  DLOG_F(ERROR, "eqFunction");
   int nArgs{popArg<int>()};
   Object* b{popArg<Object*>()};
   Object* a{popArg<Object*>()};
@@ -445,6 +462,7 @@ Continuation* eqFunction()
 
 Continuation* equalStringFunction()
 {
+  DLOG_F(ERROR, "equalStringFunction");
   int nArgs{popArg<int>()};
   Object* b{popArg<Object*>()};
   Object* a{popArg<Object*>()};
@@ -458,6 +476,7 @@ Continuation* equalStringFunction()
 
 Continuation* equalNumberFunction()
 {
+  DLOG_F(ERROR, "equalNumberFunction");
   int nArgs{popArg<int>()};
   Object* b{popArg<Object*>()};
   Object* a{popArg<Object*>()};
@@ -506,6 +525,7 @@ Continuation* equalFunction()
 
 Continuation* greaterThanFunction()
 {
+  DLOG_F(ERROR, "greaterThanFunction");
   int nArgs{popArg<int>()};
   Object* b{popArg<Object*>()};
   Object* a{popArg<Object*>()};
@@ -528,6 +548,7 @@ Continuation* greaterThanFunction()
 
 Continuation* lesserThanFunction()
 {
+  DLOG_F(ERROR, "lesserThanFunction");
   int nArgs{popArg<int>()};
   Object* b{popArg<Object*>()};
   Object* a{popArg<Object*>()};
@@ -550,6 +571,7 @@ Continuation* lesserThanFunction()
 
 Continuation* consFunction()
 {
+  DLOG_F(ERROR, "consFunction");
   int nArgs{popArg<int>()};
   Object* cdr{popArg<Object*>()};
   Object* car{popArg<Object*>()};
@@ -558,6 +580,7 @@ Continuation* consFunction()
 
 Continuation* carFunction()
 {
+  DLOG_F(ERROR, "carFunction");
   int nArgs{popArg<int>()};
   Object* cons{popArg<Object*>()};
   if (!hasTag(cons, TAG_CONS)) {
@@ -568,6 +591,7 @@ Continuation* carFunction()
 
 Continuation* cdrFunction()
 {
+  DLOG_F(ERROR, "cdrFunction");
   int nArgs{popArg<int>()};
   Object* cons{popArg<Object*>()};
   if (!hasTag(cons, TAG_CONS)) {
@@ -578,6 +602,7 @@ Continuation* cdrFunction()
 
 Continuation* listFunction()
 {
+  DLOG_F(ERROR, "listFunction");
   int nArgs{popArg<int>()};
   Object* rest;
   while (nArgs--) {
@@ -589,6 +614,7 @@ Continuation* listFunction()
 
 Continuation* displayFunction()
 {
+  DLOG_F(ERROR, "displayFunction");
   int nArgs{popArg<int>()};
   ObjectVec arguments{popArgs<Object*>(nArgs)};
   for (auto argument{arguments.rbegin()}; argument != arguments.rend(); argument++) {
@@ -600,6 +626,7 @@ Continuation* displayFunction()
 
 Continuation* functionBodyFunction()
 {
+  DLOG_F(ERROR, "functionBodyFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   if (!hasTag(obj, TAG_FUNC_USER)) {
@@ -610,6 +637,7 @@ Continuation* functionBodyFunction()
 
 Continuation* functionArglistFunction()
 {
+  DLOG_F(ERROR, "functionArglistFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   if (!hasTag(obj, TAG_FUNC_USER)) {
@@ -620,6 +648,7 @@ Continuation* functionArglistFunction()
 
 Continuation* isStringFunction()
 {
+  DLOG_F(ERROR, "isStringFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((isString(obj)) ? SCM_TRUE : SCM_FALSE);
@@ -627,6 +656,7 @@ Continuation* isStringFunction()
 
 Continuation* isNumberFunction()
 {
+  DLOG_F(ERROR, "isNumberFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((isNumeric(obj)) ? SCM_TRUE : SCM_FALSE);
@@ -634,6 +664,7 @@ Continuation* isNumberFunction()
 
 Continuation* isConsFunction()
 {
+  DLOG_F(ERROR, "isConsFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((hasTag(obj, TAG_CONS)) ? SCM_TRUE : SCM_FALSE);
@@ -641,6 +672,7 @@ Continuation* isConsFunction()
 
 Continuation* isBuiltinFunctionFunction()
 {
+  DLOG_F(ERROR, "isBuiltinFunctionFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((hasTag(obj, TAG_FUNC_BUILTIN)) ? SCM_TRUE : SCM_FALSE);
@@ -648,6 +680,7 @@ Continuation* isBuiltinFunctionFunction()
 
 Continuation* isUserFunctionFunction()
 {
+  DLOG_F(ERROR, "isUserFunctionFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((hasTag(obj, TAG_FUNC_USER)) ? SCM_TRUE : SCM_FALSE);
@@ -655,6 +688,7 @@ Continuation* isUserFunctionFunction()
 
 Continuation* isBoolFunction()
 {
+  DLOG_F(ERROR, "isBoolFunction");
   int nArgs{popArg<int>()};
   Object* obj{popArg<Object*>()};
   t_RETURN((isOneOf(obj, {TAG_TRUE, TAG_FALSE})) ? SCM_TRUE : SCM_FALSE);
