@@ -56,7 +56,7 @@ int main(int argc, char** argv)
   // run function setup for those written in scheme
   std::ifstream functionDefinitionStream;
   functionDefinitionStream.open("/Users/paul/repos/uni/dipl/src/std.scm");
-  // repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
+  repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
 
   // define input stream either as cin or from file
   std::istream* streamPtr;
