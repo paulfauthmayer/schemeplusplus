@@ -32,16 +32,19 @@ namespace trampoline {
  */
 Object* trampoline(Continuation* startFunction)
 {
-  DLOG_F(ERROR, "trampoline");
-  DLOG_F(WARNING, "getNextFunction");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: trampoline");
   Continuation* nextFunction{startFunction};
   pushFunc(NULL);
   while (nextFunction != NULL) {
-    DLOG_F(ERROR, "trampoline loop");
-    DLOG_F(WARNING, "getNextFunction");
-    DLOG_F(WARNING, "funcStack at %d", functionStack.size());
+    DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: trampoline loop");
     nextFunction = (Continuation*)(*nextFunction)();
   }
+  DLOG_IF_F(INFO,
+            LOG_TRAMPOLINE_TRACE || LOG_STACK_TRACE,
+            "trampoline finised | returning %s | argStack: %d | funcStack: %d",
+            toString(lastReturnValue).c_str(),
+            static_cast<int>(argumentStack.size()),
+            static_cast<int>(functionStack.size()));
   return lastReturnValue;
 }
 
@@ -54,27 +57,12 @@ Object* trampoline(Continuation* startFunction)
  */
 Object* evaluateExpression(Environment& env, Object* expression)
 {
-  DLOG_F(WARNING, "evaluate expression");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateExpression");
   pushArgs({&env, expression});
   return trampoline(cont(evaluate));
 }
 
 // evaluate functions and syntax
-// static int evaluateArguments(Environment& env, Object* arguments)
-// {
-//   /**
-//    * Evaluates a list of arguments and stores them on the argument stack
-//    */
-//   DLOG_F(WARNING, "evaluate arguments: %s", toString(arguments).c_str());
-//   std::size_t initialSize{argumentStack.size()};
-//   while (arguments != SCM_NIL) {
-//     auto currentArguement = getCar(arguments);
-//     // argumentStack.push(evaluate(env, currentArguement));
-//     pushArg(SCM_NIL);  // TODO!
-//     arguments = getCdr(arguments);
-//   }
-//   return argumentStack.size() - initialSize;
-// }
 
 // forward declaration of the following functions parts
 static Continuation* evaluateArguments_Part1();
@@ -85,7 +73,7 @@ static Continuation* evaluateArguments_Part1();
  */
 static Continuation* evaluateArguments()
 {
-  DLOG_F(ERROR, "evaluate arguments");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateArguments");
   // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* operation{popArg<Object*>()};
@@ -115,7 +103,7 @@ static Continuation* evaluateArguments()
 
 static Continuation* evaluateArguments_Part1()
 {
-  DLOG_F(WARNING, "evaluate arguments part1");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateArguments Part1");
   // get variables from stack
   Environment* env = popArg<Environment*>();
   Object* operation = popArg<Object*>();
@@ -142,6 +130,7 @@ static Continuation* evaluateArguments_Part1()
 
 static Continuation* evaluateBuiltinFunction()
 {
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateBuiltinFunction");
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
@@ -236,12 +225,12 @@ static Continuation* evaluateBuiltinFunction()
 
 static Continuation* evaluateUserDefinedFunction()
 {
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateUserDefinedFunction");
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
   ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
 
-  DLOG_F(INFO, "evaluate user defined function");
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
   Object* lastBodyResult;
@@ -259,10 +248,10 @@ static Continuation* evaluateUserDefinedFunction()
 
 static Continuation* evaluateSyntax()
 {
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateSyntax");
   Environment* env{popArg<Environment*>()};
   Object* syntax{popArg<Object*>()};
   Object* arguments{popArg<Object*>()};
-  DLOG_F(INFO, "evaluate builtin syntax %s", toString(syntax).c_str());
   if (!hasTag(syntax, TAG_SYNTAX)) {
     schemeThrow(toString(syntax) + " isn't a valid syntax");
   }
@@ -295,7 +284,7 @@ static Continuation* evaluateSyntax()
 static Continuation* evaluate_Part1();
 Continuation* evaluate()
 {
-  DLOG_F(WARNING, "evaluate");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate");
   // get current environment and expression from their stacks
   Environment* env{popArg<Environment*>()};
   Object* obj{popArg<Object*>()};
@@ -312,7 +301,6 @@ Continuation* evaluate()
       t_RETURN(obj);  // TODO: continue implementation here
 
     case scm::TAG_SYMBOL: {
-      DLOG_F(INFO, "getting variable %s", toString(obj).c_str());
       evaluatedObj = getVariable(*env, obj);
       if (!evaluatedObj) {
         schemeThrow("undefined variable: " + std::get<std::string>(obj->value));
@@ -340,7 +328,7 @@ Continuation* evaluate()
 // TODO: comments
 static Continuation* evaluate_Part1()
 {
-  DLOG_F(WARNING, "evaluate part1");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate part1");
   // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* obj{popArg<Object*>()};

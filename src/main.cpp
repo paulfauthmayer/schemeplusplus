@@ -18,20 +18,16 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile = true)
   do {
     try {
       // READ
-      DLOG_F(INFO, "(R)epl");
       scm::Object* expression = scm::readInput(streamPtr, isFile);
       if (expression == scm::SCM_EOF) {
         return;
       }
       // EVALUATE
-      DLOG_F(INFO, "r(E)pl");
       scm::Object* value = scm::trampoline::evaluateExpression(env, expression);
       // PRINT
-      DLOG_F(INFO, "re(P)l");
       if (value != scm::SCM_VOID) {
         std::cout << "--> " << scm::toString(value) << std::endl;
       }
-      DLOG_F(INFO, "rep(L)");
     }
     catch (scm::schemeException& e) {
       std::cerr << e.what() << '\n';

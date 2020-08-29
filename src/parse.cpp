@@ -120,7 +120,6 @@ Object* readInput(std::istream* streamPtr, bool isFile)
       return SCM_EOF;
     }
     // TODO: input stack!
-    // TODO: handle fileStream exit condition
     line = line.substr(0, line.find(';'));
     std::vector<std::string> split = splitLine(line);
     elements.insert(elements.end(),

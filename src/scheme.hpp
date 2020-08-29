@@ -132,30 +132,26 @@ bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes);
 std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
 
-// Macros
+// Macros and Typedefs
 
-// VOIDPTRFUNC is a function returning a void pointer
-typedef void* (*VOIDPTRFUNC)();
-// using VOIDPTRFUNC = void*();
-// using VOIDPTRFUNC = std::function<void*>;
+// what this is supposed to do: *function -> *function
+// VoidoPtrFunc is a function returning a void pointer
+using VoidPtrFunc = void*();
+// Continuation is a function returning a pointer to a function
+using Continuation = VoidPtrFunc*();
 
-// // VOIDPTRFUNCPTR is a pointer to that
-typedef VOIDPTRFUNC* VOIDPTRFUNCPTR;
-// using VOIDPTRFUNCPTR = VOIDPTRFUNC*;
-
-// // CONTFUNC is a function returning a pointer to a function
-typedef VOIDPTRFUNCPTR(Continuation)();
-// using CONTFUNC = VOIDPTRFUNC();
-// using CONTFUNC = std::function<VOIDPTRFUNCPTR>;
-
-// // CONTFUNCPTR is a pointer to that
-typedef Continuation* ContinuationPtr;
-// using CONTFUNCPTR = CONTFUNC*;
-
-// // CONTFUNCPTR is a function returning that
-// typedef ContinuationPtr(ContinuationPtrFunc)();
+// in theory, this should do the same thing as above
+// but it doesn't. why? If you know why please let me know :)
+// using VoidPtrFunc = std::function<void*()>;
+// using Continuation = std::function<VoidPtrFunc*()>;
 
 using ObjectVec = std::vector<Object*>;
 using ObjectStack = std::stack<Object*>;
 using FunctionStack = std::stack<Continuation*>;
+
+// logging activation
+extern bool LOG_TRAMPOLINE_TRACE;
+extern bool LOG_STACK_TRACE;
+extern bool LOG_PARSER;
+extern bool LOG_MEMORY;
 }  // namespace scm

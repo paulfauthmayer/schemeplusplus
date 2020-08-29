@@ -128,6 +128,12 @@ bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes)
   return std::any_of(validTypes.begin(), validTypes.end(), lambda);
 }
 
+// enable logging for certain parts of the interpreter
+bool LOG_TRAMPOLINE_TRACE = true;
+bool LOG_STACK_TRACE = true;
+bool LOG_PARSER = true;
+bool LOG_MEMORY = true;
+
 // other helper functions
 
 static std::string consToString(scm::Object* cons, std::string& str)

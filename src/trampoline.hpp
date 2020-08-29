@@ -36,7 +36,7 @@ void pushArg(ArgumentTypeVariant arg);
 void pushArgs(std::vector<ArgumentTypeVariant> arguments);
 Continuation* popFunc();
 void pushFunc(Continuation* nextFunc);
-void printArg(ArgumentTypeVariant arg, std::string action);
+void printArg(ArgumentTypeVariant arg, std::string prefix = "", std::string postfix = "");
 void printArgStack();
 
 /**
@@ -50,7 +50,10 @@ T popArg()
   if (argumentStack.empty()) {
     schemeThrow("trying to pop argument from empty stack");
   }
-  printArg(argumentStack.top(), "popping into " + std::string(typeid(T).name()) + " :");
+  printArg(argumentStack.top(),
+           "popping",
+           "into " + std::string(typeid(T).name()) + " [" + std::to_string(argumentStack.size()) +
+               "->" + std::to_string(argumentStack.size() - 1) + ']');
   T arg{std::get<T>(argumentStack.top())};
   argumentStack.pop();
   return arg;
@@ -64,7 +67,7 @@ T popArg()
 template <typename T>
 std::vector<T> popArgs(int n)
 {
-  DLOG_F(INFO, "popping %d values from stack", n);
+  DLOG_IF_F(INFO, LOG_STACK_TRACE, "popping %d values from stack", n);
   if (argumentStack.size() < n) {
     printArgStack();
     schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
