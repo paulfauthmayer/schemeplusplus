@@ -35,6 +35,11 @@ Continuation* tCall(Continuation* nextFunc,
   return nextFunc;
 }
 
+Continuation* tCall(Continuation* nextFunc, std::vector<ArgumentTypeVariant> arguments)
+{
+  return tCall(nextFunc, NULL, arguments);
+}
+
 void printArg(ArgumentTypeVariant arg, std::string action = "")
 {
   if (std::holds_alternative<Environment*>(arg)) {

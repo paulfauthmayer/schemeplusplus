@@ -179,9 +179,12 @@ static Continuation* evaluateBuiltinFunction()
     case FUNC_EQ:
       return eqFunction();
       break;
-      // case FUNC_EQUAL:
-      //   return equalFunction();
-      // break;
+    // case FUNC_EQUAL:
+    //   return equalFunction();
+    //   break;
+    case FUNC_EQUAL_STRING:
+      return equalStringFunction();
+      break;
     case FUNC_EQUAL_NUMBER:
       return equalNumberFunction();
       break;
@@ -251,12 +254,16 @@ static Object* evaluateUserDefinedFunction(Environment& env,
   return NULL;  // TODO! evaluate(funcEnv, functionBody);
 }
 
-static Continuation* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object* arguments)
+static Continuation* evaluateSyntax()
 {
+  Environment* env{popArg<Environment*>()};
+  Object* syntax{popArg<Object*>()};
+  Object* arguments{popArg<Object*>()};
   DLOG_F(INFO, "evaluate builtin syntax %s", toString(syntax).c_str());
   if (!hasTag(syntax, TAG_SYNTAX)) {
     schemeThrow(toString(syntax) + " isn't a valid syntax");
   }
+  pushArgs({env, arguments});
   switch (getBuiltinFuncTag(syntax)) {
     case SYNTAX_QUOTE:
       return quoteSyntax();
@@ -345,16 +352,15 @@ static Continuation* evaluate_Part1()
 
   switch (evaluatedOperation->tag) {
     case TAG_FUNC_BUILTIN:
-      pushArgs({env, evaluatedOperation, argumentCons});
-      pushFunc(cont(evaluateBuiltinFunction));
-      return cont(evaluateArguments);
+      return tCall(cont(evaluateArguments),
+                   cont(evaluateBuiltinFunction),
+                   {env, evaluatedOperation, argumentCons});
     case TAG_SYNTAX:
-      pushArgs({env, evaluatedOperation, argumentCons});
-      return cont(evaluateSyntax);
+      return tCall(cont(evaluateSyntax), {env, evaluatedOperation, argumentCons});
     case TAG_FUNC_USER:
-      pushArgs({env, evaluatedOperation, argumentCons});
-      pushFunc(cont(evaluateUserDefinedFunction));
-      return cont(evaluateArguments);
+      return tCall(cont(evaluateArguments),
+                   cont(evaluateUserDefinedFunction),
+                   {env, evaluatedOperation, argumentCons});
     default:
       schemeThrow(toString(evaluatedOperation) + " doesn't exist");
       break;

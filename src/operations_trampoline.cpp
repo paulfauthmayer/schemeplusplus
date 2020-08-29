@@ -31,40 +31,17 @@ namespace trampoline {
 Object* toSchemeBool(Environment& env, Object* evaluatedObject)
 {
   // TODO: maybe move this out, don't require env but require evaluated Object
-  switch (evaluatedObject->tag) {
-    case scm::TAG_INT: {
-      return (getIntValue(evaluatedObject) != 0) ? SCM_TRUE : SCM_FALSE;
-      break;
-    }
-    case scm::TAG_FLOAT: {
-      return (getFloatValue(evaluatedObject) != 0) ? SCM_TRUE : SCM_FALSE;
-      break;
-    }
-    case scm::TAG_STRING: {
-      return (getStringValue(evaluatedObject) == std::string{}) ? SCM_TRUE : SCM_FALSE;
-      break;
-    }
-    case scm::TAG_TRUE:
-    case scm::TAG_FUNC_BUILTIN:
-    case scm::TAG_FUNC_USER:
-    case scm::TAG_SYNTAX: {
-      return SCM_TRUE;
-      break;
-    }
-    case scm::TAG_NIL:
-    case scm::TAG_FALSE: {
-      return SCM_FALSE;
-      break;
-    }
-    default: {
-      schemeThrow("evaluation not yet implemented for " + scm::toString(evaluatedObject));
-      break;
-    }
-  }
   return SCM_FALSE;
 }
 
 // BUILTIN SYNTAX
+
+// forward declaration of continuation parts for syntax functions
+static Continuation* beginSyntax_Part1();
+static Continuation* defineSyntax_Part1();
+static Continuation* ifSyntax_Part1();
+static Continuation* setSyntax_Part1();
+
 Continuation* defineSyntax()
 {
   // Environment& env, scm::Object* arguments
@@ -88,17 +65,31 @@ Continuation* defineSyntax()
   if (value == SCM_NIL || getCdr(value) != SCM_NIL) {
     schemeThrow("define takes exactyly 2 arguments");
   }
-  // value = evaluate(env, getCar(value));
-  value = SCM_NIL;  // TODO!
+
+  // push arguments required for next part
+  pushArgs({env, symbol});
+
+  // call evaluate then continue with next part
+  return tCall(cont(evaluate), cont(defineSyntax_Part1), {env, getCar(value)});
+}
+
+static Continuation* defineSyntax_Part1()
+{
+  Environment* env{popArg<Environment*>()};
+  Object* symbol{popArg<Object*>()};
+  Object* value{lastReturnValue};
+
   define(*env, symbol, value);
-  t_RETURN(SCM_NIL)
+  t_RETURN(SCM_VOID)
 }
 
 Continuation* setSyntax()
 {
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
-  Object *symbol, *expression, *value;
+
+  Object *symbol, *expression;
+
   try {
     symbol = getCar(argumentCons);
     argumentCons = getCdr(argumentCons);
@@ -106,14 +97,24 @@ Continuation* setSyntax()
     if (getCdr(argumentCons) != SCM_NIL) {
       schemeThrow("set requires exactly two arguments: (set! {name} {value})");
     }
-    // value = evaluate(env, expression);
-    value = SCM_NIL;  // TODO!
-    set(*env, symbol, value);
   }
   catch (std::bad_variant_access& e) {
     schemeThrow("set requires exactly two arguments: (set! {name} {value})");
   }
+  // push arguments required for next part
+  pushArgs({env, symbol});
 
+  // call evaluate then continue with next part
+  return tCall(cont(evaluate), cont(setSyntax_Part1), {env, expression});
+}
+
+static Continuation* setSyntax_Part1()
+{
+  Environment* env{popArg<Environment*>()};
+  Object* symbol{popArg<Object*>()};
+  Object* value{lastReturnValue};
+
+  set(*env, symbol, value);
   t_RETURN(value);
 }
 
@@ -144,24 +145,85 @@ Continuation* ifSyntax()
   catch (std::bad_variant_access& e) {
     schemeThrow("if requires 3 arguments: (if {condition} {true} {false})");
   }
-  // TODO TRAMPOLINE
-  // return (toSchemeBool(*env, condition) == SCM_TRUE) ? evaluate(env, trueExpression)
-  //                                                    : evaluate(env, falseExpression);
-  t_RETURN(SCM_NIL);  // TODO!
+  // push arguments required for next part
+  pushArgs({env, trueExpression, falseExpression});
+
+  // call evaluate then continue with next part
+  return tCall(cont(evaluate), cont(ifSyntax_Part1), {env, condition});
+}
+static Continuation* ifSyntax_Part1()
+{
+  Environment* env{popArg<Environment*>()};
+  Object* trueExpression{popArg<Object*>()};
+  Object* falseExpression{popArg<Object*>()};
+
+  Object* evaluatedCondition{lastReturnValue};
+
+  Object* conditionAsBool;
+  switch (evaluatedCondition->tag) {
+    case scm::TAG_INT: {
+      conditionAsBool = (getIntValue(evaluatedCondition) != 0) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_FLOAT: {
+      conditionAsBool = (getFloatValue(evaluatedCondition) != 0) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_STRING: {
+      conditionAsBool =
+          (getStringValue(evaluatedCondition) == std::string{}) ? SCM_TRUE : SCM_FALSE;
+      break;
+    }
+    case scm::TAG_TRUE:
+    case scm::TAG_FUNC_BUILTIN:
+    case scm::TAG_FUNC_USER:
+    case scm::TAG_SYNTAX: {
+      conditionAsBool = SCM_TRUE;
+      break;
+    }
+    case scm::TAG_NIL:
+    case scm::TAG_FALSE: {
+      conditionAsBool = SCM_FALSE;
+      break;
+    }
+    default: {
+      schemeThrow("evaluation not yet implemented for " + toString(evaluatedCondition));
+      break;
+    }
+  }
+  Object* expression{(conditionAsBool == SCM_TRUE) ? trueExpression : falseExpression};
+  tCall(cont(evaluate), {env, expression});
 }
 
 Continuation* beginSyntax()
 {
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
-  Object *currentExpression, *lastValue{SCM_NIL};
-  while (argumentCons != SCM_NIL) {
-    currentExpression = getCar(argumentCons);
-    argumentCons = getCdr(argumentCons);
-    // lastValue = evaluate(env, currentExpression);
-    lastValue = SCM_NIL;
-  };
-  t_RETURN(lastValue);
+  if (argumentCons == SCM_NIL) {
+    t_RETURN(SCM_VOID);
+  }
+  else {
+    return tCall(cont(beginSyntax_Part1), {env, argumentCons});
+  }
+}
+
+static Continuation* beginSyntax_Part1()
+{
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
+
+  Object* currentExpression = getCar(argumentCons);
+  argumentCons = getCdr(argumentCons);
+
+  if (argumentCons == SCM_NIL) {
+    // evaluate last expression in begin block and return
+    return tCall(cont(evaluate), {env, currentExpression});
+  }
+  else {
+    // push arguments for next part
+    pushArgs({env, argumentCons});
+    return tCall(cont(evaluate), cont(beginSyntax_Part1), {env, currentExpression});
+  }
 }
 
 Continuation* lambdaSyntax()
@@ -309,7 +371,9 @@ Continuation* multFunction()
 // TODO: throw out, implement in scheme
 Continuation* divFunction()
 {
+  schemeThrow("division is currently not implemented, write it yourself!");
   int nArgs{popArg<int>()};
+  ObjectVec arguments{popArgs<Object*>(nArgs)};
   // Object* divisor{multFunction(stack, nArgs - 1)};
   // Object* dividend{popArg<Object*>()};
 
@@ -379,27 +443,18 @@ Continuation* eqFunction()
   t_RETURN((a == b) ? SCM_TRUE : SCM_FALSE);
 }
 
-// TODO: can this be done?
-// Object* compareTwoNumbers(ObjectStack& stack, int nArgs, std::function comparison)
-// {
-//   Object* a{popArg<Object*>()};
-//   Object* b{popArg<Object*>()};
-//   if (!isNumeric(a) || !isNumeric(b)) {
-//     schemeThrow("= only works with numbers");
-//   }
-//   if (isFloatingPoint(a) && isFloatingPoint(b)) {
-//     return (comparison(getFloatValue(a), getFloatValue(b))) ? SCM_TRUE : SCM_FALSE;
-//   }
-//   else if (isFloatingPoint(a)) {
-//     return (comparison(getFloatValue(a), getIntValue(b))) ? SCM_TRUE : SCM_FALSE;
-//   }
-//   else if (isFloatingPoint(b)) {
-//     return (comparison(getIntValue(a), getFloatValue(b))) ? SCM_TRUE : SCM_FALSE;
-//   }
-//   else {
-//     return (comparison(getIntValue(a), getIntValue(b))) ? SCM_TRUE : SCM_FALSE;
-//   }
-// }
+Continuation* equalStringFunction()
+{
+  int nArgs{popArg<int>()};
+  Object* b{popArg<Object*>()};
+  Object* a{popArg<Object*>()};
+  if (!isString(a) || !isString(b)) {
+    schemeThrow("equal-string? only works with strings");
+  }
+  else {
+    t_RETURN((getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE);
+  }
+}
 
 Continuation* equalNumberFunction()
 {
@@ -424,27 +479,30 @@ Continuation* equalNumberFunction()
 }
 
 //  TODO: implment this in scheme!
-// Object* equalFunction(ObjectStack& stack, int nArgs)
-// {
-//   Object* b{popArg<Object*>()};
-//   Object* a{popArg<Object*>()};
-//   if (isNumeric(a) && isNumeric(b)) {
-//     push(stack, {a, b});
-//     return equalNumberFunction(stack, nArgs);
-//   }
-//   else if (getTag(a) != getTag(b)) {
-//     return SCM_FALSE;
-//   }
-//   else if (isString(a) && isString(b)) {
-//     return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
-//   }
-//   else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
-//     schemeThrow("cons comparison not implemented yet!");
-//   }
-//   else {
-//     schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
-//   }
-// }
+Continuation* equalFunction()
+{
+  int nArgs{popArg<int>()};
+  ObjectVec arguments{popArgs<Object*>(nArgs)};
+  schemeThrow("equal? is currently not implemented, write it yourself!");
+  // Object* b{popArg<Object*>()};
+  // Object* a{popArg<Object*>()};
+  // if (isNumeric(a) && isNumeric(b)) {
+  //   push(stack, {a, b});
+  //   return equalNumberFunction(stack, nArgs);
+  // }
+  // else if (getTag(a) != getTag(b)) {
+  //   return SCM_FALSE;
+  // }
+  // else if (isString(a) && isString(b)) {
+  //   return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
+  // }
+  // else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
+  //   schemeThrow("cons comparison not implemented yet!");
+  // }
+  // else {
+  //   schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
+  // }
+}
 
 Continuation* greaterThanFunction()
 {

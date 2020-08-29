@@ -25,6 +25,7 @@ extern Object* lastReturnValue;
 Continuation* tCall(Continuation* nextFunc,
                     Continuation* nextPart = NULL,
                     std::vector<ArgumentTypeVariant> arguments = {});
+Continuation* tCall(Continuation* nextFunc, std::vector<ArgumentTypeVariant> arguments = {});
 Continuation* tReturn(Object* value);
 void initializeEvaluationStacks();
 template <typename T>

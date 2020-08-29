@@ -45,6 +45,7 @@ enum FunctionTag {
   FUNC_EQ,
   FUNC_EQUAL,
   FUNC_EQUAL_NUMBER,
+  FUNC_EQUAL_STRING,
   FUNC_GT,
   FUNC_LT,
   FUNC_LIST,

@@ -20,6 +20,7 @@ Continuation* divFunction();
 Continuation* modFunction();
 Continuation* eqFunction();
 // Continuation* equalFunction();
+Continuation* equalStringFunction();
 Continuation* equalNumberFunction();
 Continuation* greaterThanFunction();
 Continuation* lesserThanFunction();
