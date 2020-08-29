@@ -192,7 +192,7 @@ static Continuation* ifSyntax_Part1()
     }
   }
   Object* expression{(conditionAsBool == SCM_TRUE) ? trueExpression : falseExpression};
-  tCall(cont(evaluate), {env, expression});
+  return tCall(cont(evaluate), {env, expression});
 }
 
 Continuation* beginSyntax()
