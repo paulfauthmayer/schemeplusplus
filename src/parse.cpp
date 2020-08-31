@@ -12,24 +12,44 @@ namespace scm {
 
 // CHECK FUNCTIONS
 
+/**
+ * Checks if a lexical element can be interpreted as a float value
+ * @param str the lexical element
+ * @returns can the element be interpreted as a float value?
+ */
 bool isFloat(std::string str)
 {
   std::regex pattern(R"(^\-?[0-9]*\.[0-9]+$)");
   return std::regex_match(str, pattern);
 }
 
+/**
+ * Checks if a lexical element can be interpreted as a integer value
+ * @param str the lexical element
+ * @returns can the element be interpreted as a integer value?
+ */
 bool isInt(std::string str)
 {
   std::regex pattern(R"(^\-?[0-9]+$)");
   return std::regex_match(str, pattern);
 }
 
+/**
+ * Checks if a lexical element can be interpreted as a string
+ * @param str the lexical element
+ * @returns can the element be interpreted as a string?
+ */
 bool isString(std::string str)
 {
   std::regex pattern(R"(^\".*\"$)");
   return std::regex_match(str, pattern);
 }
 
+/**
+ * Checks if a lexical element can be interpreted as a symbol
+ * @param str the lexical element
+ * @returns can the element be interpreted as a symbol?
+ */
 bool isSymbol(std::string str)
 {
   std::regex pattern(R"(^[^\s^\d^.^\-^']\S*$|^\-$)");
@@ -38,12 +58,18 @@ bool isSymbol(std::string str)
 
 // LEXING
 
+/**
+ * Splits an expression string into its individual lexical elements
+ * @param line the expression line to split
+ * @returns a vector of the resulting elements
+ */
 std::vector<std::string> splitLine(std::string line)
 {
-  /**
-   * The lexer is implemented on top of regular expressions!
-   */
   std::vector<std::string> v;
+  // this regex does all the splitting!
+  // 1st group: strings
+  // 2nd group: symbols and numbers
+  // 3rd group: single character elements
   std::regex re(R"(\"[^\"]*\"|[#<>=\-\w\d\.\?\!]+|[\'\+\/\*\%\=\(\)])");
   for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re);
        i != std::sregex_iterator();
@@ -53,20 +79,33 @@ std::vector<std::string> splitLine(std::string line)
   return v;
 }
 
+/**
+ * Interpret an element of a lexical element vector as a cons Object
+ * @param current the iterator pointing to the current object in a vector
+ * @returns the interpreted cons Object
+ */
 Object* interpretList(std::vector<std::string>::iterator& current)
 {
   Object *car, *cdr;
+  // ')' marks the end of the cons
   if (*current == ")") {
     DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as cons-end", (*current).c_str());
     return SCM_NIL;
   }
+  // car = current element, cdr = remaining elements
   car = interpretInput(current);
   cdr = interpretList(++current);
   return newCons(car, cdr);
 }
 
+/**
+ * Interpret an element of a lexical element vector as a cons Object
+ * @param current the iterator pointing to the current object in a vector
+ * @returns the interpreted Object
+ */
 Object* interpretInput(std::vector<std::string>::iterator& current)
 {
+  // check as what type of object the element can be interpreted
   if (isInt(*current)) {
     DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as integer", (*current).c_str());
     return newInteger(std::stoi(*current));
@@ -114,7 +153,6 @@ bool canBeEvaluated(const std::vector<std::string>& v)
 {
   /**
    * Check whether the input so far can be evaluated.
-   *
    * @param v Container of the currently detected tokens
    * @return boolean, is the input valid?
    */
@@ -123,6 +161,13 @@ bool canBeEvaluated(const std::vector<std::string>& v)
   return openParanthesesCount == closeParanthesesCount;
 }
 
+/**
+ * Read expressions from an input stream. Will continue to read until a valid expression has been
+ * detected.
+ * @param streamPtr a pointer pointing to the stream object from which to read
+ * @param isFile if true, return on EOF
+ * @returns the read Object
+ */
 Object* readInput(std::istream* streamPtr, bool isFile)
 {
   // setup container to keep the individual lexical elements
@@ -144,20 +189,27 @@ Object* readInput(std::istream* streamPtr, bool isFile)
       emptyCount = 0;
     }
 
+    // remove comments, as they shouldn't be interpreted
     line = line.substr(0, line.find(';'));
+
+    // split the read line into lexical elements and store them
     std::vector<std::string> split = splitLine(line);
     elements.insert(elements.end(),
                     std::make_move_iterator(split.begin()),
                     std::make_move_iterator(split.end()));
+
     // wrap expression in parantheses for lazy typists
     // will f.ex. turn `+ 1 2 3` into `(+ 1 2 3)`
+    // but f.ex. not `-1` into `(-1)`
     if (elements.size() && isSymbol(elements[0]) && elements[0] != "(") {
       DLOG_IF_F(INFO, LOG_PARSER, "wrapping expression in parantheses");
       elements.insert(elements.begin(), "(");
       elements.push_back(")");
     }
+    // repeat until we have an interpretable sequence of elements
   } while (!canBeEvaluated(elements) || elements.empty());
 
+  // interpret the detected elements and return for evaluation
   std::vector<std::string>::iterator iter{elements.begin()};
   Object* obj{interpretInput(iter)};
   DLOG_IF_F(INFO, LOG_PARSER, "read expression %s", toString(obj).c_str());
