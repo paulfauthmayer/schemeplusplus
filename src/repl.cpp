@@ -30,6 +30,11 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
         return;
       }
 
+      // handle input cancel by user
+      if (expression == SCM_VOID) {
+        continue;
+      }
+
       // EVALUATE
       scm::Object* value = scm::trampoline::evaluateExpression(env, expression);
 

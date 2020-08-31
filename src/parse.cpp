@@ -182,8 +182,11 @@ Object* readInput(std::istream* streamPtr, bool isFile)
       return SCM_EOF;
     }
     // if the user enters three newlines in succession, return to repl
-    if (line.size() == 0 && !isFile && ++emptyCount > 2) {
-      return SCM_NIL;
+    if (line.size() == 0 && !isFile) {
+      if (++emptyCount > 2) {
+        DLOG_IF_F(WARNING, LOG_PARSER, "user cancelled input, return to loop");
+        return SCM_VOID;
+      }
     }
     else {
       emptyCount = 0;
