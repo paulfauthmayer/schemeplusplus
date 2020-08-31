@@ -290,6 +290,7 @@ Continuation* addFunction()
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: addFunction");
   int nArgs{popArg<int>()};
   DLOG_IF_F(INFO, LOG_STACK_TRACE, "nArgs = %d", nArgs);
+
   // get all arguments necessary and check for type validity
   if (nArgs <= 0) {
     schemeThrow("expected at least 1 argument");
@@ -335,7 +336,14 @@ Continuation* addFunction()
   }
 
   else {
-    auto lambda = [](int a, Object* b) { return getIntValue(b) + a; };
+    auto lambda = [](int a, Object* b) {
+      int result = getIntValue(b) + a;
+      if (a > 0 && getIntValue(b) > 0 and (result < a || result < getIntValue(b))) {
+        DLOG_F(ERROR, "integer overflow detected!");
+        schemeThrow("integer overflow detected!");
+      }
+      return result;
+    };
     double result = std::reduce(arguments.begin(), arguments.end(), 0, lambda);
     t_RETURN(newInteger(result));
   }
@@ -396,7 +404,14 @@ Continuation* multFunction()
     t_RETURN(newFloat(std::reduce(arguments.begin(), arguments.end(), double(1), lambda)));
   }
   else {
-    auto lambda = [](int a, Object* b) { return a * getIntValue(b); };
+    auto lambda = [](int a, Object* b) {
+      int result = getIntValue(b) * a;
+      if (a > 0 && getIntValue(b) > 0 and (result < a || result < getIntValue(b))) {
+        DLOG_F(ERROR, "integer overflow detected!");
+        schemeThrow("integer overflow detected!");
+      }
+      return a * getIntValue(b);
+    };
     t_RETURN(newInteger(std::reduce(arguments.begin(), arguments.end(), int{1}, lambda)));
   }
 }
