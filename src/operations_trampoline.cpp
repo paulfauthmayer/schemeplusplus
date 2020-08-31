@@ -41,6 +41,7 @@ static Continuation* beginSyntax_Part1();
 static Continuation* defineSyntax_Part1();
 static Continuation* ifSyntax_Part1();
 static Continuation* setSyntax_Part1();
+static Continuation* divFunction_Part1();
 
 Continuation* defineSyntax()
 {
@@ -400,25 +401,31 @@ Continuation* multFunction()
 Continuation* divFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: divFunction");
-  schemeThrow("division is currently not implemented, write it yourself!");
   int nArgs{popArg<int>()};
-  ObjectVec arguments{popArgs<Object*>(nArgs)};
-  // Object* divisor{multFunction(stack, nArgs - 1)};
-  // Object* dividend{popArg<Object*>()};
+  if (nArgs < 2) {
+    schemeThrow("division needs at least 2 arguments");
+  }
+  return tCall(cont(multFunction), cont(divFunction_Part1), {nArgs - 1});
+}
 
-  // if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
-  //   t_RETURN(newFloat(getFloatValue(dividend) / getFloatValue(divisor)));
-  // }
-  // else if (isFloatingPoint(dividend)) {
-  //   t_RETURN(newFloat(getFloatValue(dividend) / static_cast<double>(getIntValue(divisor))));
-  // }
-  // else if (isFloatingPoint(divisor)) {
-  //   t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) / getFloatValue(divisor)));
-  // }
-  // else {
-  //   t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) /
-  //                     static_cast<double>(getIntValue(divisor))));
-  // }
+Continuation* divFunction_Part1()
+{
+  Object* divisor{lastReturnValue};
+  Object* dividend{popArg<Object*>()};
+
+  if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
+    t_RETURN(newFloat(getFloatValue(dividend) / getFloatValue(divisor)));
+  }
+  else if (isFloatingPoint(dividend)) {
+    t_RETURN(newFloat(getFloatValue(dividend) / static_cast<double>(getIntValue(divisor))));
+  }
+  else if (isFloatingPoint(divisor)) {
+    t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) / getFloatValue(divisor)));
+  }
+  else {
+    t_RETURN(newFloat(static_cast<double>(getIntValue(dividend)) /
+                      static_cast<double>(getIntValue(divisor))));
+  }
   t_RETURN(NULL);
 }
 
