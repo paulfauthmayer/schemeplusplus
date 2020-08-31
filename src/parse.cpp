@@ -128,6 +128,7 @@ Object* readInput(std::istream* streamPtr, bool isFile)
   // setup container to keep the individual lexical elements
   std::vector<std::string> elements;
   std::string line;
+  int emptyCount{0};
 
   // read symbols until we have an evaluatable expression
   do {
@@ -135,7 +136,14 @@ Object* readInput(std::istream* streamPtr, bool isFile)
       DLOG_IF_F(INFO, LOG_PARSER, "EOF of input file detected");
       return SCM_EOF;
     }
-    // TODO: input stack!
+    // if the user enters three newlines in succession, return to repl
+    if (line.size() == 0 && !isFile && ++emptyCount > 2) {
+      return SCM_NIL;
+    }
+    else {
+      emptyCount = 0;
+    }
+
     line = line.substr(0, line.find(';'));
     std::vector<std::string> split = splitLine(line);
     elements.insert(elements.end(),
