@@ -55,4 +55,59 @@ void set(Environment& env, Object* key, Object* value)
   } while (currentEnvPtr != NULL);
 }
 
+void printEnv(Environment& env)
+{
+  int longestVariableNameLength = std::reduce(
+      env.bindings.begin(), env.bindings.end(), 0, [](int longestLength, Object* binding) {
+        return (getStringValue(getCar(binding)).size() > longestLength)
+                   ? getStringValue(getCar(binding)).size()
+                   : longestLength;
+      });
+
+  std::cout << "======== SYNTAX ========\n";
+  for (auto binding : env.bindings) {
+    if (hasTag(getCdr(binding), TAG_SYNTAX)) {
+      std::string name = getStringValue(getCar(binding));
+      std::cout << toString(getCar(binding));
+      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
+        std::cout << ' ';
+      }
+      std::cout << " :=  " << toString(getCdr(binding)) << "\n";
+    }
+  }
+  std::cout << "======== FUNCTIONS ========\n";
+  for (auto binding : env.bindings) {
+    if (hasTag(getCdr(binding), TAG_FUNC_BUILTIN)) {
+      std::string name = getStringValue(getCar(binding));
+      std::cout << toString(getCar(binding));
+      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
+        std::cout << ' ';
+      }
+      std::cout << " :=  " << toString(getCdr(binding)) << "\n";
+    }
+  }
+  for (auto binding : env.bindings) {
+    if (hasTag(getCdr(binding), TAG_FUNC_USER)) {
+      std::string name = getStringValue(getCar(binding));
+      std::cout << toString(getCar(binding));
+      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
+        std::cout << ' ';
+      }
+      std::cout << " :=  function args: " << toString(getUserFunctionArgList(getCdr(binding)))
+                << "\n";
+    }
+  }
+  std::cout << "======== VARIABLES ========\n";
+  for (auto binding : env.bindings) {
+    if (!isOneOf(getCdr(binding), {TAG_FUNC_BUILTIN, TAG_FUNC_USER, TAG_SYNTAX})) {
+      std::string name = getStringValue(getCar(binding));
+      std::cout << toString(getCar(binding));
+      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
+        std::cout << ' ';
+      }
+      std::cout << " := " << toString(getCdr(binding)) << "\n";
+    }
+  }
+  std::cout << "===========================\n";
+}
 }  // namespace scm

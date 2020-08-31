@@ -14,6 +14,7 @@ class Environment {
   ~Environment() = default;
   friend void set(Environment& env, Object* key, Object* value);
   friend void define(Environment& env, Object* key, Object* value);
+  friend void printEnv(Environment& env);
   friend Object* getBinding(Environment& env, Object* key);
   friend Object* getVariable(Environment& env, Object* key);
 };
