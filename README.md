@@ -16,11 +16,13 @@ Thus I cannot vouch for any other operating systems but I don't see why it shoul
 
 Please also note that this was my first time writing anything substantial in C++. Weird language, especially when coming from python. Nonetheless, this was quite fun but in equal measures also frustrating. Well worth it though!
 
+---
+
 ## Design Philosophy
 
 * **free functions** over class functions
   * I generally like to stay as close to functional programming as possible - in this case meaning that I use classes and structs exclusively as data containers / data types. Relevant functionality is provided by free (friend) functions instead and lambdas are made use of where sensible. As my colleague Nils put it:
-    > "good c++ code basically looks like c with more **::** thrown in the mix".
+    > "good c++ code basically looks like c with more **::** thrown into the mix".
 * **readability** over performance
   * in the end, I don't care too much about how performant my solution is - if there's need for it, this can be done later. In the meantime, I'm going to gain a lot more from having code that others (and future me) can understand.
 * **regex** based parser
@@ -48,6 +50,7 @@ Please also note that this was my first time writing anything substantial in C++
 * **pure** C++
   * except for [loguru](https://github.com/emilk/loguru), an awesome, simple logging library, I'm staying clear of any non-standard libraries. In parts for simplicity, in other parts because I wanted to learn the language and not specific libraries.
 
+---
 ## Functionality
 
 * a range of data types
@@ -116,13 +119,17 @@ Please also note that this was my first time writing anything substantial in C++
 
 ### Supported Syntax
 
-* begin
-* define
-* set!
-* if
-* quote
-* lambdas
-* help
+| syntax                   |       symbol       | type     | example                              |                                                    result |
+|--------------------------|:------------------:|----------|--------------------------------------|----------------------------------------------------------:|
+| begin                    |       `begin`      | syntax   | `(begin`<br/>`(+ 1 1)`<br/>`(+ 2 2))`            |                                                       `4` |
+| define                   |      `define`      | syntax   | `(define a 10)`                      |                              defines variable `a` as `10` |
+| set                      |       `set!`       | syntax   | `(set! a 10)`                        | defines `a` as `10` in current and all paren environments |
+| if                       |        `if`        | syntax   | `(if 1 (+ 1 1) (+ 2 2))`             |                                                       `4` |
+| quote                    |       `quote`      | syntax   | `(quote 1 2 3)`<br>`(quote (1 2 3))` |                                          `1`<br>`(1 2 3)` |
+| lambda                   |      `lambda`      | syntax   | `(lambda (x y) (+ x 1))`             | creates new user defined function                                           |
+| help                     | `help`             | syntax   | `(help)`<br>`(help +)`               | shows all bindings<br>shows help text for passed function |
+| exit                     | `exit!`            | keyword  | `exit!`                              | exits the scheme repl elegantly                           |
+
 
 ### Functions
 
@@ -166,20 +173,16 @@ Please also note that this was my first time writing anything substantial in C++
 | for loop                 |     `for-loop`     | udf     | `(for-loop 0 10 diplay)`             |                                      displays `0` ... `9` |
 | factorial                |     `factorial`    | udf     | `(factorial 4)`                      |                                                      `10` |
 | fibonacci                |        `fib`       | udf     | `(fib 10)`                           |                                                      `55` |
-| begin                    |       `begin`      | syntax  | `(begin (+ 1 1) (+ 2 2))`            |                                                       `4` |
-| define                   |      `define`      | syntax  | `(define a 10)`                      |                              defines variable `a` as `10` |
-| set                      |       `set!`       | syntax  | `(set! a 10)`                        | defines `a` as `10` in current and all paren environments |
-| if                       |        `if`        | syntax  | `(if 1 (+ 1 1) (+ 2 2))`             |                                                       `4` |
-| quote                    |       `quote`      | syntax  | `(quote 1 2 3)`<br>`(quote (1 2 3))` |                                          `1`<br>`(1 2 3)` |
-| lambda                   | `lambda`           | syntax  | `(lambda (x y) (+ x 1))`             | creates new udf                                           |
-| help                     | `help`             | syntax  | `(help)`<br>`(help +)`               | shows all bindings<br>shows help text for passed function |
+
 ### In Process
 
 * code optimisation
 * garbage collection via reference counting
 * full unit test coverage
 
-### Wanna Dos
+---
+
+## Wanna Dos
 
 * curses based interface
   * text manipulation is not great (can't move the curser left or right except via deleting the current input
