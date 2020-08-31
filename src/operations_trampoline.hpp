@@ -12,6 +12,7 @@ Continuation* quoteSyntax();
 Continuation* ifSyntax();
 Continuation* beginSyntax();
 Continuation* lambdaSyntax();
+Continuation* helpSyntax();
 
 // BUILTIN FUNCTIONS
 Continuation* addFunction();

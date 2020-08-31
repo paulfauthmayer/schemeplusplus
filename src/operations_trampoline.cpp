@@ -34,14 +34,23 @@ Object* toSchemeBool(Environment& env, Object* evaluatedObject)
   return SCM_FALSE;
 }
 
-// BUILTIN SYNTAX
-
-// forward declaration of continuation parts for syntax functions
+// forward declaration of continuation parts
 static Continuation* beginSyntax_Part1();
 static Continuation* defineSyntax_Part1();
 static Continuation* ifSyntax_Part1();
 static Continuation* setSyntax_Part1();
 static Continuation* divFunction_Part1();
+
+// BUILTIN SYNTAX
+
+Continuation* helpSyntax()
+{
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: helpSyntax");
+  Environment* env{popArg<Environment*>()};
+  Object* argumentCons{popArg<Object*>()};
+  printEnv(*env);
+  t_RETURN(SCM_VOID);
+}
 
 Continuation* defineSyntax()
 {

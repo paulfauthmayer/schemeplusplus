@@ -286,6 +286,8 @@ static Continuation* evaluateSyntax()
     case SYNTAX_BEGIN:
       return beginSyntax();
       break;
+    case SYNTAX_HELP:
+      return helpSyntax();
     default:
       schemeThrow("undefined syntax: " + toString(syntax));
       break;
