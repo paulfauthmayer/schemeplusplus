@@ -7,36 +7,12 @@
 #include "evaluate_trampoline.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
+#include "repl.hpp"
 #include "scheme.hpp"
 #include "setup.hpp"
 #include "test.hpp"
 
 #define DEBUG
-
-void repl(scm::Environment& env, std::istream* streamPtr, bool isFile = true)
-{
-  do {
-    try {
-      // READ
-      scm::Object* expression = scm::readInput(streamPtr, isFile);
-      if (expression == scm::SCM_EOF) {
-        return;
-      }
-      // EVALUATE
-      scm::Object* value = scm::trampoline::evaluateExpression(env, expression);
-      // PRINT
-      if (value != scm::SCM_VOID) {
-        std::cout << "--> " << scm::toString(value) << std::endl;
-      }
-    }
-    catch (scm::schemeException& e) {
-      std::cerr << e.what() << '\n';
-    }
-    catch (std::exception& e) {
-      std::cerr << "[CPP::ERROR] " << e.what() << '\n';
-    }
-  } while (true);  // LOOP!
-};
 
 int main(int argc, char** argv)
 {
@@ -52,12 +28,11 @@ int main(int argc, char** argv)
   // run function setup for those written in scheme
   std::ifstream functionDefinitionStream;
   functionDefinitionStream.open("/Users/paul/repos/uni/dipl/src/std.scm");
-  repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
+  scm::repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
 
   // define input stream either as cin or from file
   std::istream* streamPtr;
   std::ifstream inputStream;
-  std::streambuf* orig_cin = 0;
   bool isFile;
   switch (argc) {
     case 1: {
@@ -84,7 +59,7 @@ int main(int argc, char** argv)
   }
 
   // start the REPL
-  repl(topLevelEnv, streamPtr, isFile);
+  scm::repl(topLevelEnv, streamPtr, isFile);
 
   return 0;
 }
