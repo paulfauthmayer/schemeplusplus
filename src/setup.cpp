@@ -6,6 +6,14 @@
 
 namespace scm {
 
+/**
+ * Define a new builtin syntax object in an environment
+ * @param env the environment in which to define the syntax
+ * @param name the name of the syntax
+ * @param nArgs the number of arguments required by the syntax, specify -1 for 0-inf arguments
+ * @param tag the tag of the function for identification purposes
+ * @param helpText a text that's shown when help is requested for this syntax
+ */
 void defineNewSyntax(Environment& env,
                      std::string name,
                      int nArgs,
@@ -16,6 +24,14 @@ void defineNewSyntax(Environment& env,
   define(env, newSymbol(name), func);
 }
 
+/**
+ * Define a new builtin function object in an environment
+ * @param env the environment in which to define the function
+ * @param name the name of the function
+ * @param nArgs the number of arguments required by the function, specify -1 for 0-inf arguments
+ * @param tag the tag of the function for identification purposes
+ * @param helpText a text that's shown when help is requested for this function
+ */
 void defineNewBuiltinFunction(Environment& env,
                               std::string name,
                               int nArgs,
@@ -26,6 +42,10 @@ void defineNewBuiltinFunction(Environment& env,
   define(env, newSymbol(name), func);
 }
 
+/**
+ * Setup an environment with all builtin functions and syntax.
+ * @param env the environment in which to define the operations
+ */
 void setupEnvironment(Environment& env)
 {
   std::string helpText{};
