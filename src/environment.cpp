@@ -2,11 +2,18 @@
 #include <exception>
 #include <iostream>
 #include <loguru.hpp>
+#include <numeric>
 #include <vector>
 #include "memory.hpp"
 #include "scheme.hpp"
 
 namespace scm {
+
+Environment::Environment(const Environment& env)
+{
+  parentEnv = env.parentEnv;
+  bindings = env.bindings;
+}
 Object* getBinding(Environment& env, std::string& key)
 {
   Environment* currentEnv = &env;

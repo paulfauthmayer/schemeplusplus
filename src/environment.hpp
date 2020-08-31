@@ -11,6 +11,7 @@ class Environment {
 
  public:
   Environment(Environment* parent = NULL) : parentEnv(parent){};
+  Environment(const Environment& obj);
   ~Environment() = default;
   friend void set(Environment& env, Object* key, Object* value);
   friend void define(Environment& env, Object* key, Object* value);
