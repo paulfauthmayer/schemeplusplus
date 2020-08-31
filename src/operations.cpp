@@ -59,7 +59,7 @@ Object* defineSyntax(Environment& env, scm::Object* arguments)
    * Define a new variable in a given environment
    * @param env: the environment in which to define the variable
    * @param arguments: the arguments of the operation as a cons object
-   * @return a scm::Object with the result of the operation
+   * @returns a scm::Object with the result of the operation
    */
   Object *symbol, *value;
   if (arguments == SCM_NIL) {
@@ -165,7 +165,7 @@ Object* addFunction(ObjectStack& stack, int nArgs)
    * Function that handles the addition or concatenation of multiple scm::Objects
    * @param stack: stack containing scm::Object*, which are the prepared arguments
    * @param nArgs: how many arguments the function should take
-   * @return a new scm::Object* with the result of the computation
+   * @returns a new scm::Object* with the result of the computation
    */
 
   // get all arguments necessary and check for type validity

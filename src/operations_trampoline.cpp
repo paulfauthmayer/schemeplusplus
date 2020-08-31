@@ -93,7 +93,7 @@ Continuation* helpSyntax()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to define the variable
  * @param argumentCons: the arguments of the operation as a cons object
- * @return continuation to either defineSyntax_Part1 or defineLambda
+ * @returns continuation to either defineSyntax_Part1 or defineLambda
  */
 Continuation* defineSyntax()
 {
@@ -143,7 +143,7 @@ Continuation* defineSyntax()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to define the variable
  * @param symbol: the key of the definition
- * @return VOID
+ * @returns VOID
  */
 static Continuation* defineSyntax_Part1()
 {
@@ -163,7 +163,7 @@ static Continuation* defineSyntax_Part1()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
- * @return continuation to setSyntax_Part1
+ * @returns continuation to setSyntax_Part1
  */
 Continuation* setSyntax()
 {
@@ -196,7 +196,7 @@ Continuation* setSyntax()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to start
  * @param symbol: the key of the definition
- * @return VOID
+ * @returns VOID
  */
 static Continuation* setSyntax_Part1()
 {
@@ -214,7 +214,7 @@ static Continuation* setSyntax_Part1()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
- * @return the first argument
+ * @returns the first argument
  */
 Continuation* quoteSyntax()
 {
@@ -232,7 +232,7 @@ Continuation* quoteSyntax()
  * This part handles the evaluation of the condition.
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
- * @return one of the expressions
+ * @returns one of the expressions
  */
 Continuation* ifSyntax()
 {
@@ -268,7 +268,7 @@ Continuation* ifSyntax()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to start
  * @param symbol: the key of the definition
- * @return VOID
+ * @returns VOID
  */
 static Continuation* ifSyntax_Part1()
 {
@@ -321,7 +321,7 @@ static Continuation* ifSyntax_Part1()
  * This part only starts the process!
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
- * @return one of the expressions
+ * @returns one of the expressions
  */
 Continuation* beginSyntax()
 {
@@ -343,7 +343,7 @@ Continuation* beginSyntax()
  * Expects arguments as pop from argument stack.
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
- * @return one of the expressions
+ * @returns one of the expressions
  */
 static Continuation* beginSyntax_Part1()
 {
@@ -372,7 +372,7 @@ static Continuation* beginSyntax_Part1()
  * @param env: the environment in which to start
  * @param argumentCons: the arguments of the operation as a cons object
  * @see defineSyntax
- * @return one of the expressions
+ * @returns one of the expressions
  */
 Continuation* lambdaSyntax()
 {
@@ -399,7 +399,7 @@ Continuation* lambdaSyntax()
 /**
  * Function that handles the addition or concatenation of multiple scm::Objects
  * @param nArgs: how many arguments the function should take from the stack
- * @return a new scm::Object* with the result of the computation
+ * @returns a new scm::Object* with the result of the computation
  */
 Continuation* addFunction()
 {
@@ -471,7 +471,7 @@ Continuation* addFunction()
 /**
  * Function that handles the subtraction of one or more Objects.
  * @param nArgs: how many arguments the function should take from the stack
- * @return a new scm::Object* with the result of the computation
+ * @returns a new scm::Object* with the result of the computation
  */
 Continuation* subFunction()
 {
@@ -512,7 +512,7 @@ Continuation* subFunction()
 /**
  * function that handles the multiplication of one or more numeric objects.
  * @param nargs: how many arguments the function should take from the stack
- * @return a new scm::object* with the result of the computation
+ * @returns a new scm::object* with the result of the computation
  */
 Continuation* multFunction()
 {
@@ -549,7 +549,7 @@ Continuation* multFunction()
  * Function that handles the division of an Object by the product of one or more numeric Objects.
  * This part calls the evaluation of the divisor.
  * @param nArgs: how many arguments the function should take from the stack
- * @return a continuation to multFunction and divFunction_Part1
+ * @returns a continuation to multFunction and divFunction_Part1
  */
 Continuation* divFunction()
 {
@@ -564,7 +564,7 @@ Continuation* divFunction()
 /**
  * Continuation of divFunction. Gets evaluated divisor and applys division.
  * @param nArgs: how many arguments the function should take from the stack
- * @return a new scm::Object* with the result of the computation
+ * @returns a new scm::Object* with the result of the computation
  */
 Continuation* divFunction_Part1()
 {
@@ -590,7 +590,7 @@ Continuation* divFunction_Part1()
 /**
  * Call a given function with the specified arguments
  * @param nArgs: how many arguments the function should take from the stack
- * @return the return value of the called function
+ * @returns the return value of the called function
  */
 Object* applyFunction()
 {
@@ -601,7 +601,7 @@ Object* applyFunction()
 /**
  * Perform pointer comparison of two objects.
  * @param nArgs: how many arguments the function should take from the stack
- * @return SCM_TRUE or SCM_False dependent on result
+ * @returns SCM_TRUE or SCM_False dependent on result
  */
 Continuation* eqFunction()
 {
@@ -615,7 +615,7 @@ Continuation* eqFunction()
 /**
  * Checks if the string values of two string objects are the same.
  * @param nArgs: how many arguments the function should take from the stack
- * @return SCM_TRUE or SCM_False dependent on result
+ * @returns SCM_TRUE or SCM_False dependent on result
  */
 Continuation* equalStringFunction()
 {
@@ -634,7 +634,7 @@ Continuation* equalStringFunction()
 /**
  * Checks if the numeric values of two Objects are the same.
  * @param nArgs: how many arguments the function should take from the stack
- * @return SCM_TRUE or SCM_False dependent on result
+ * @returns SCM_TRUE or SCM_False dependent on result
  */
 Continuation* equalNumberFunction()
 {
@@ -662,7 +662,7 @@ Continuation* equalNumberFunction()
 /**
  * Checks if the numeric values of the first object is greater than that of the scond.
  * @param nArgs: how many arguments the function should take from the stack
- * @return SCM_TRUE or SCM_False dependent on result
+ * @returns SCM_TRUE or SCM_False dependent on result
  */
 Continuation* greaterThanFunction()
 {
@@ -690,7 +690,7 @@ Continuation* greaterThanFunction()
 /**
  * Checks if the numeric values of the first object is lesser than that of the scond.
  * @param nArgs: how many arguments the function should take from the stack
- * @return SCM_TRUE or SCM_False dependent on result
+ * @returns SCM_TRUE or SCM_False dependent on result
  */
 Continuation* lesserThanFunction()
 {

@@ -42,7 +42,7 @@ void printArgStack();
 /**
  * Pops and returns the topmost element of the argument stack. Implemented because
  * the member `pop` function of std::stack doesn't return the popped value
- * @return the popped argument, can be of any type in ArgumentType Variant
+ * @returns the popped argument, can be of any type in ArgumentType Variant
  */
 template <typename T>
 T popArg()
@@ -62,7 +62,7 @@ T popArg()
 /**
  * Pops and returns the topmost N elements of the argument stack
  * @param n the amount of values popped
- * @return the popped objects in a vector of the specified type
+ * @returns the popped objects in a vector of the specified type
  */
 template <typename T>
 std::vector<T> popArgs(int n)

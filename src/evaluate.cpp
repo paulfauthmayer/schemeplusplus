@@ -17,7 +17,7 @@ Object* pop(ObjectStack& stack)
   /**
    * Pops and returns the topmost element of a given ObjectStack
    * @param stack the stack from which to pop
-   * @return the popped scm::Object*
+   * @returns the popped scm::Object*
    */
   if (stack.empty()) {
     schemeThrow("trying to pop from empty stack");
@@ -38,7 +38,7 @@ ObjectVec popN(ObjectStack& stack, int n)
    * Pops and returns the topmost N elements of a given ObjectStack
    * @param stack the stack from which to pop
    * @param n the amount of values popped
-   * @return the popped objects in a ObjectVec
+   * @returns the popped objects in a ObjectVec
    */
   DLOG_F(INFO, "popping %d values from stack", n);
   if (stack.size() < n)

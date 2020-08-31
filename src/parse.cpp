@@ -154,7 +154,7 @@ bool canBeEvaluated(const std::vector<std::string>& v)
   /**
    * Check whether the input so far can be evaluated.
    * @param v Container of the currently detected tokens
-   * @return boolean, is the input valid?
+   * @returns boolean, is the input valid?
    */
   long openParanthesesCount{std::count(v.begin(), v.end(), "(")};
   long closeParanthesesCount{std::count(v.begin(), v.end(), ")")};

@@ -37,7 +37,7 @@ void initializeEvaluationStacks()
  * @param nextFunc the next function to call
  * @param nextPart the continuation of the current function
  * @param arguments a vector of arguments to be pushed to the stack
- * @return a pointer to the next function
+ * @returns a pointer to the next function
  */
 Continuation* tCall(Continuation* nextFunc,
                     Continuation* nextPart,

@@ -52,7 +52,7 @@ Object* trampoline(Continuation* startFunction)
  * obfuscate it from the main REPL.
  * @param env The top level environment used for the evaluation
  * @param expression The expression to be evaluated
- * @return the result of the expression
+ * @returns the result of the expression
  */
 Object* evaluateExpression(Environment& env, Object* expression)
 {
@@ -73,7 +73,7 @@ static Continuation* evaluateArguments_Part1();
  * @param env Environment in which to evaluate the arguments
  * @param operation the currently evaluated operation
  * @param argumentCons the lis of arguments as a cons Object
- * @return the next step in our trampoline
+ * @returns the next step in our trampoline
  */
 static Continuation* evaluateArguments()
 {
@@ -113,7 +113,7 @@ static Continuation* evaluateArguments()
  * @param env Environment in which to evaluate the arguments
  * @param operation the currently evaluated operation
  * @param argumentCons the lis of arguments as a cons Object
- * @return the next step in our trampoline
+ * @returns the next step in our trampoline
  */
 static Continuation* evaluateArguments_Part1()
 {
@@ -148,7 +148,7 @@ static Continuation* evaluateArguments_Part1()
  * @param env Environment in which to evaluate the arguments
  * @param function the currently evaluated function
  * @param nArgs the number of Arguments to be popped from the argument stack
- * @return the next function in the function stack
+ * @returns the next function in the function stack
  */
 static Continuation* evaluateBuiltinFunction()
 {
@@ -247,7 +247,7 @@ static Continuation* evaluateBuiltinFunction()
  * @param env Environment in which to evaluate the arguments
  * @param function the currently evaluated function
  * @param nArgs the number of Arguments to be popped from the argument stack
- * @return the next function in the function stack
+ * @returns the next function in the function stack
  */
 static Continuation* evaluateUserDefinedFunction()
 {
@@ -297,7 +297,7 @@ static Continuation* evaluateUserDefinedFunction()
  * @param env Environment in which to evaluate the arguments
  * @param syntax the currently evaluated syntax
  * @param arguments the arguments passed to the syntax
- * @return the next function in the function stack
+ * @returns the next function in the function stack
  */
 static Continuation* evaluateSyntax()
 {
