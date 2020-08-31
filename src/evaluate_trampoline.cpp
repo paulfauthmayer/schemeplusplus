@@ -12,7 +12,6 @@
 namespace scm {
 namespace trampoline {
 
-// TODO: move them to a common place
 // Macros
 // we frequently need to convert a funciton Pointer to a Continuation Pointer
 #define cont(x) (Continuation*)(x)
@@ -58,6 +57,7 @@ Object* trampoline(Continuation* startFunction)
 Object* evaluateExpression(Environment& env, Object* expression)
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateExpression");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "expression: %s", toString(expression).c_str());
   pushArgs({&env, expression});
   return trampoline(cont(evaluate));
 }
@@ -69,6 +69,10 @@ static Continuation* evaluateArguments_Part1();
 /**
  * Evaluates the argument cons object that used to be passed to functions and
  * stores them in the argument stack.
+ * Expects parameters as pop form the argument stack
+ * @param env Environment in which to evaluate the arguments
+ * @param operation the currently evaluated operation
+ * @param argumentCons the lis of arguments as a cons Object
  * @return the next step in our trampoline
  */
 static Continuation* evaluateArguments()
@@ -102,6 +106,15 @@ static Continuation* evaluateArguments()
   }
 };
 
+/**
+ * The continuation of evaluateArguments.
+ * Is called again and again until all arguments have ben evaluated and pushed to the stack.
+ * Expects parameters as pop form the argument stack
+ * @param env Environment in which to evaluate the arguments
+ * @param operation the currently evaluated operation
+ * @param argumentCons the lis of arguments as a cons Object
+ * @return the next step in our trampoline
+ */
 static Continuation* evaluateArguments_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateArguments Part1");
@@ -129,20 +142,31 @@ static Continuation* evaluateArguments_Part1()
   }
 };
 
+/**
+ * Evaluates a builtin function and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param function the currently evaluated function
+ * @param nArgs the number of Arguments to be popped from the argument stack
+ * @return the next function in the function stack
+ */
 static Continuation* evaluateBuiltinFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateBuiltinFunction");
+  // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+
   DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
+  // catch wrong number of arguments
   if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
     schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
                 std::to_string(getBuiltinFuncNArgs(function)) + " arguments, got " +
                 std::to_string(nArgs) + '\n');
   }
-  // }
-  // static Continuation* evaluateBuiltinFunction_Part1(){
+
+  // push arguments required for evaluation of builtin functions
   pushArg(nArgs);
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
@@ -172,9 +196,6 @@ static Continuation* evaluateBuiltinFunction()
     case FUNC_EQ:
       return eqFunction();
       break;
-    // case FUNC_EQUAL:
-    //   return equalFunction();
-    //   break;
     case FUNC_EQUAL_STRING:
       return equalStringFunction();
       break;
@@ -223,13 +244,23 @@ static Continuation* evaluateBuiltinFunction()
   }
 }
 
+/**
+ * Evaluate a user defined function object and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param function the currently evaluated function
+ * @param nArgs the number of Arguments to be popped from the argument stack
+ * @return the next function in the function stack
+ */
 static Continuation* evaluateUserDefinedFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateUserDefinedFunction");
+  // pop arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
 
+  // get arguments and list of expressions
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
   Environment* funcEnv{new Environment(getUserFunctionParentEnv(function))};
@@ -241,9 +272,11 @@ static Continuation* evaluateUserDefinedFunction()
   if (nArgs > 0) {
     ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
 
+    // define all function arguments in the function environment
     while (functionArguments != SCM_NIL) {
       if (nArgs == 0) {
-        schemeThrow("to few arguments passed to function");
+        schemeThrow(
+            "to few arguments passed to function, type `(help fname)` for more information");
       }
       Object* argName{getCar(functionArguments)};
       Object* argValue{evaluatedArguments[--nArgs]};
@@ -261,15 +294,28 @@ static Continuation* evaluateUserDefinedFunction()
   }
 }
 
+/**
+ * Evaluate a syntax object and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param syntax the currently evaluated syntax
+ * @param arguments the arguments passed to the syntax
+ * @return the next function in the function stack
+ */
 static Continuation* evaluateSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateSyntax");
+  // pop required arguments
   Environment* env{popArg<Environment*>()};
   Object* syntax{popArg<Object*>()};
   Object* arguments{popArg<Object*>()};
+
+  // check if syntax really is a syntax
   if (!hasTag(syntax, TAG_SYNTAX)) {
     schemeThrow(toString(syntax) + " isn't a valid syntax");
   }
+
+  // push arguments required for syntax evaluation
   pushArgs({env, arguments});
   switch (getBuiltinFuncTag(syntax)) {
     case SYNTAX_QUOTE:
@@ -299,6 +345,13 @@ static Continuation* evaluateSyntax()
 }
 
 static Continuation* evaluate_Part1();
+/**
+ * Evaluates the next object on the stack
+ * Expects parameters as pop from the argument stack.
+ * @param env the environment in which tho evaluate the object
+ * @param obj the object to be evaluated
+ * @returns the next function on the function stack or another continuation function
+ */
 Continuation* evaluate()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate");
@@ -343,7 +396,14 @@ Continuation* evaluate()
   }
 }
 
-// TODO: comments
+/**
+ * Continuation of evaluate, handles evaluation of functions and syntax.
+ * Writes restul to `lastReturnValue`.
+ * Expects parameters as pop from the argument stack.
+ * @param env the environment in which tho evaluate the object
+ * @param obj the object to be evaluated
+ * @returns the next function on the function stack or another continuation function
+ */
 static Continuation* evaluate_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate part1");
@@ -361,16 +421,19 @@ static Continuation* evaluate_Part1()
 
   switch (evaluatedOperation->tag) {
     case TAG_FUNC_BUILTIN:
+      // evaluate arguments first then continue with function evaluation
       return tCall(cont(evaluateArguments),
                    cont(evaluateBuiltinFunction),
                    {env, evaluatedOperation, argumentCons});
     case TAG_SYNTAX:
       return tCall(cont(evaluateSyntax), {env, evaluatedOperation, argumentCons});
     case TAG_FUNC_USER:
+      // evaluate arguments first then continue with function evaluation
       return tCall(cont(evaluateArguments),
                    cont(evaluateUserDefinedFunction),
                    {env, evaluatedOperation, argumentCons});
     default:
+      // this is effectively the same as quote!
       if (evaluatedOperation != NULL)
         t_RETURN(evaluatedOperation);
       schemeThrow(toString(evaluatedOperation) + " doesn't exist");
