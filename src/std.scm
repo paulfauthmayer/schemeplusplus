@@ -48,6 +48,13 @@
     (lambda (x y)
         (not (> x y))))
 
+(define (equal? x y)
+    (if (and (string? x) (string? y))
+        (equal-string? x y)
+        (if (and (number? x) (number? y))
+            (= 0 0)
+            #f)))
+
 (define max
     (lambda (x y)
         (if (< x y) y x)))
@@ -61,6 +68,17 @@
         (if (= n 0)
             1
             (* num (pow num (- n 1))))))
+
+;; arithmetics
+(define (% num denum)
+    (define (helper num denum count)
+        (if (< num denum)
+            num
+            (helper (- num denum) denum (+ count 1))))
+    (if (= denum 0)
+        nil
+        (helper num denum 0))
+)
 
 ;; higher order functions
 
@@ -76,6 +94,13 @@
 ))
 
 ;; misc
+
+(define (factorial x)
+    (if (= x 0)
+        0
+        (if (= x 1)
+            1
+            (* x (factorial (- x 1))))))
 
 (define sum-below 
     (lambda (n)
