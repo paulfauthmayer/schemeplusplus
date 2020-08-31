@@ -109,10 +109,6 @@ void setupEnvironment(Environment& env)
   (/ 2 2 2) -> 0.5";
   defineNewBuiltinFunction(env, "/", -1, FUNC_DIV, helpText);
   helpText =
-      "returns the remainder of a division\n\
-  (% 5 2) -> 1";
-  defineNewBuiltinFunction(env, "%", 2, FUNC_MOD, helpText);
-  helpText =
       "returns true if same exact object\n\
   (eq? 1 1) -> #f\n\
   (eq? a a) -> #t";
@@ -136,7 +132,7 @@ void setupEnvironment(Environment& env)
   defineNewBuiltinFunction(env, ">", 2, FUNC_GT, helpText);
   helpText =
       "returns true if the first numbers is lesser than the latter\n\
-  (< 1 1) -> #t\n\
+  (< 1 1) -> #f\n\
   (< 3 2) -> #f\n\
   (< 0 1.0) -> #t";
   defineNewBuiltinFunction(env, "<", 2, FUNC_LT, helpText);

@@ -370,28 +370,6 @@ Object* equalNumberFunction(ObjectStack& stack, int nArgs)
   }
 }
 
-Object* equalFunction(ObjectStack& stack, int nArgs)
-{
-  Object* b{pop(stack)};
-  Object* a{pop(stack)};
-  if (isNumeric(a) && isNumeric(b)) {
-    push(stack, {a, b});
-    return equalNumberFunction(stack, nArgs);
-  }
-  else if (getTag(a) != getTag(b)) {
-    return SCM_FALSE;
-  }
-  else if (isString(a) && isString(b)) {
-    return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
-  }
-  else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
-    schemeThrow("cons comparison not implemented yet!");
-  }
-  else {
-    schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
-  }
-}
-
 Object* greaterThanFunction(ObjectStack& stack, int nArgs)
 {
   Object* b{pop(stack)};

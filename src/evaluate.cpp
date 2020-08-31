@@ -101,9 +101,6 @@ static Object* evaluateBuiltinFunction(Environment& env,
     case FUNC_DIV:
       return divFunction(argumentStack, nArgs);
       break;
-    case FUNC_MOD:
-      return modFunction(argumentStack, nArgs);
-      break;
     case FUNC_CONS:
       return consFunction(argumentStack, nArgs);
       break;
@@ -115,9 +112,6 @@ static Object* evaluateBuiltinFunction(Environment& env,
       break;
     case FUNC_EQ:
       return eqFunction(argumentStack, nArgs);
-      break;
-    case FUNC_EQUAL:
-      return equalFunction(argumentStack, nArgs);
       break;
     case FUNC_EQUAL_NUMBER:
       return equalNumberFunction(argumentStack, nArgs);
