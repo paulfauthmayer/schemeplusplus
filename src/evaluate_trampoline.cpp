@@ -234,6 +234,10 @@ static Continuation* evaluateUserDefinedFunction()
   Object* functionBody{getUserFunctionBodyList(function)};
   Environment* funcEnv{new Environment(getUserFunctionParentEnv(function))};
 
+  if (nArgs == 0 && functionArguments != SCM_NIL) {
+    schemeThrow("to few arguments passed to function, type `(help fname)` for more information");
+  }
+
   if (nArgs > 0) {
     ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
 
