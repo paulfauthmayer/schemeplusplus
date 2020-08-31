@@ -268,16 +268,11 @@ Continuation* lambdaSyntax()
   Object *argList, *bodyList;
   try {
     argList = getCar(argumentCons);
-    argumentCons = getCdr(argumentCons);
-    bodyList = getCar(argumentCons);
-    argumentCons = getCdr(argumentCons);
+    bodyList = getCdr(argumentCons);
     DLOG_F(INFO, "new lambda %s => %s", toString(argList).c_str(), toString(bodyList).c_str());
-    if (argumentCons != SCM_NIL) {
-      schemeThrow("lambda requires exactly two arguments: (lambda {argument} {body})");
-    }
   }
   catch (std::bad_variant_access& e) {
-    schemeThrow("lambda requires exactly two arguments: (lambda {argument} {body})");
+    schemeThrow("lambda requires at least two arguments: (lambda {argument} {body})");
   }
   t_RETURN(newUserFunction(argList, bodyList, *env));
 }
