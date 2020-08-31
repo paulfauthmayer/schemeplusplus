@@ -60,14 +60,14 @@ Object* newCons(Object* car, Object* cdr)
   return obj;
 }
 
-Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag)
+Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag, std::string helpText)
 {
   Object* obj{new Object(TAG_FUNC_BUILTIN)};
-  obj->value = FuncValue{"primitive:" + name, numArgs, funcTag};
+  obj->value = FuncValue{"primitive:" + name, numArgs, funcTag, helpText};
   return obj;
 };
 
-Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag)
+Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag, std::string helpText)
 {
   Object* obj{new Object(TAG_SYNTAX)};
   obj->value = FuncValue{"syntax:" + name, numArgs, funcTag};

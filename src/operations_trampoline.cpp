@@ -48,7 +48,41 @@ Continuation* helpSyntax()
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: helpSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
-  printEnv(*env);
+  Object* variable;
+  switch (argumentCons->tag) {
+    case TAG_NIL:
+      printEnv(*env);
+      break;
+    case TAG_CONS:
+      switch (getCar(argumentCons)->tag) {
+        case TAG_SYMBOL: {
+          variable = getVariable(*env, getCar(argumentCons));
+          switch (variable->tag) {
+            std::cout << "======== " << toString(getCar(argumentCons)) << " ========\n";
+            case TAG_FUNC_BUILTIN:
+            case TAG_SYNTAX:
+              std::cout << getBuiltinFuncHelpText(variable) << '\n';
+              break;
+            case TAG_FUNC_USER:
+              std::cout << prettifyUserFunction(variable);
+              break;
+
+            default:
+              std::cout << toString(variable) << '\n';
+              break;
+          }
+          break;
+        }
+        default:
+          std::cout << toString(getCar(argumentCons)) << '\n';
+          break;
+      }
+      break;
+    default:
+      std::cout << "4\n";
+      std::cout << toString(argumentCons) << '\n';
+      t_RETURN(argumentCons) break;
+  }
   t_RETURN(SCM_VOID);
 }
 

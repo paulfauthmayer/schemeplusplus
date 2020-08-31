@@ -70,6 +70,7 @@ struct FuncValue {
   std::string name;
   int nArgs;
   FunctionTag funcTag;
+  std::string helpText;
 };
 
 class Environment;  // forward definition for environment.hpp
@@ -122,6 +123,7 @@ Object* getCdr(Object* obj);
 FunctionTag getBuiltinFuncTag(Object* obj);
 std::string getBuiltinFuncName(Object* obj);
 int getBuiltinFuncNArgs(Object* obj);
+std::string getBuiltinFuncHelpText(Object* obj);
 Object* getUserFunctionBodyList(Object* obj);
 Object* getUserFunctionArgList(Object* obj);
 Environment* getUserFunctionParentEnv(Object* obj);
@@ -132,6 +134,7 @@ bool isFloatingPoint(Object* obj);
 bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes);
 std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
+std::string prettifyUserFunction(Object* func);
 
 // Macros and Typedefs
 

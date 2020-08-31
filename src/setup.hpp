@@ -7,8 +7,16 @@
 
 namespace scm {
 
-void defineNewSyntax(Environment& env, std::string name, int nArgs, FunctionTag tag);
-void defineNewBuiltinFunction(Environment& env, std::string name, int nArgs, FunctionTag tag);
+void defineNewSyntax(Environment& env,
+                     std::string name,
+                     int nArgs,
+                     FunctionTag tag,
+                     std::string helpText);
+void defineNewBuiltinFunction(Environment& env,
+                              std::string name,
+                              int nArgs,
+                              FunctionTag tag,
+                              std::string helpText);
 void setupEnvironment(Environment& env);
 
 }  // namespace scm

@@ -77,6 +77,14 @@ int getBuiltinFuncNArgs(Object* obj)
   return std::get<FuncValue>(obj->value).nArgs;
 }
 
+std::string getBuiltinFuncHelpText(Object* obj)
+{
+  if (!isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_SYNTAX})) {
+    schemeThrow("not a builtin function!");
+  }
+  return std::get<FuncValue>(obj->value).helpText;
+}
+
 Object* getUserFunctionArgList(Object* obj)
 {
   if (!hasTag(obj, TAG_FUNC_USER)) {
@@ -199,4 +207,43 @@ std::string toString(Object* obj)
       break;
   }
 }
+
+std::string prettifyUserFunction(Object* func)
+{
+  if (!hasTag(func, TAG_FUNC_USER))
+    schemeThrow("not a user defined function!");
+
+  // define container for result and tokens
+  std::string pretty;
+  std::string token;
+
+  // create streamstring to read from
+  std::stringstream ss{toString(func)};
+
+  // keep track of number of open parantheses for indentation purposes
+  int indentCount{};
+  int closeCount;
+  bool discardFirst{true};
+
+  while (std::getline(ss, token, '(')) {
+    // first split is always empty and can be discarded
+    if (discardFirst) {
+      discardFirst = false;
+      continue;
+    }
+    // indent by proper amount of spaces
+    for (int i{}; i < indentCount; i++) {
+      std::cout << "  ";
+    }
+    // print line
+    std::cout << '(' << token << '\n';
+
+    // calculate indentation for next line
+    indentCount++;
+    closeCount = std::count(token.begin(), token.end(), ')');
+    indentCount -= closeCount;
+  }
+  return pretty;
+}
+
 }  // namespace scm
