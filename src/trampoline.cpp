@@ -8,22 +8,37 @@
 namespace scm {
 namespace trampoline {
 
+/**
+ * the stack that contains arguments that are passed
+ * on to the following functions in the trampoline.
+ */
 std::stack<ArgumentTypeVariant> argumentStack;
+/**
+ * the stack that contains the following functions in the trampoline.
+ */
 std::stack<Continuation*> functionStack;
+/**
+ * a container to keep the last return value of all functions
+ */
 Object* lastReturnValue = SCM_NIL;
 
+/**
+ * Setup both stacks.
+ */
 void initializeEvaluationStacks()
 {
   argumentStack = std::stack<ArgumentTypeVariant>();
   functionStack = std::stack<Continuation*>();
 }
 
-inline Continuation* tReturn(Object* value)
-{
-  lastReturnValue = value;
-  return popFunc();
-}
-
+/**
+ * Return the next function to run, push the function after the next one to the stack
+ * and push the required arguments for the next function to the stack.
+ * @param nextFunc the next function to call
+ * @param nextPart the continuation of the current function
+ * @param arguments a vector of arguments to be pushed to the stack
+ * @return a pointer to the next function
+ */
 Continuation* tCall(Continuation* nextFunc,
                     Continuation* nextPart,
                     std::vector<ArgumentTypeVariant> arguments)
@@ -35,11 +50,25 @@ Continuation* tCall(Continuation* nextFunc,
   return nextFunc;
 }
 
+/**
+ * Return the next function to run and push the required arguments for the next function to the
+ * stack.
+ * @overload
+ * @param nextFunc the next function to call
+ * @param arguments a vector of arguments to be pushed to the stack
+ * @returns a pointer to the next function
+ */
 Continuation* tCall(Continuation* nextFunc, std::vector<ArgumentTypeVariant> arguments)
 {
   return tCall(nextFunc, NULL, arguments);
 }
 
+/**
+ * Log an argument from the argument stack.
+ * @param arg the argument to print
+ * @param prefix prefix for the log message
+ * @param postfix postfix for the log message
+ */
 void printArg(ArgumentTypeVariant arg, std::string prefix, std::string postfix)
 {
   if (std::holds_alternative<Environment*>(arg)) {
@@ -67,6 +96,9 @@ void printArg(ArgumentTypeVariant arg, std::string prefix, std::string postfix)
   }
 }
 
+/**
+ * Log the entire argument stack.
+ */
 void printArgStack()
 {
   std::stack<ArgumentTypeVariant> placeholder{};
@@ -105,6 +137,10 @@ void pushArgs(std::vector<ArgumentTypeVariant> arguments)
   }
 }
 
+/**
+ * Pops the next function from the function stack
+ * @returns a pointer to the next function
+ */
 Continuation* popFunc()
 {
   if (functionStack.size() == 0) {
@@ -120,6 +156,10 @@ Continuation* popFunc()
   return nextFunc;
 }
 
+/**
+ * Pushes a function on the function stack
+ * @param nextFunc the function pointer to push on the stack
+ */
 void pushFunc(Continuation* nextFunc)
 {
   DLOG_IF_F(INFO,
