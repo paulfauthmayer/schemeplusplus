@@ -3,9 +3,15 @@
 #include "scheme.hpp"
 
 namespace scm {
+
+/**
+ * Used as a container for variable definitions. All functions, syntax and user defined
+ * objects are stored in an environment. They are organised in an hierarchical manner with each
+ * Environment object pointing to its parent Environment. Therefore, children have access to the
+ * variables defined in their parent Environment but not vice versa.
+ */
 class Environment {
  private:
-  /* data */
   std::vector<scm::Object*> bindings;
   Environment* parentEnv;
 
