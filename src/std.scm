@@ -2,9 +2,6 @@
 (define def define)
 (define nil '())
 
-;; constants
-(define pi 3.14) ;; who needs those other digits anyway ;)
-
 ;; functions -- logical
 (define to-bool
     (lambda (x)
@@ -112,3 +109,6 @@
   (if (<= n 2)
       1
       (+ (fib (- n 1)) (fib (- n 2))))))
+
+;; constants
+(define pi (/ 22 7)) ;; who needs the real pi anyways ;)
