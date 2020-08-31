@@ -16,7 +16,6 @@
 namespace scm {
 namespace trampoline {
 
-// TODO: move them to a common place
 // Macros
 // we frequently need to convert a funciton Pointer to a Continuation Pointer
 #define cont(x) (Continuation*)(x)
@@ -27,13 +26,6 @@ namespace trampoline {
     return popFunc();       \
   }
 
-// HELPER FUNCTIONS
-Object* toSchemeBool(Environment& env, Object* evaluatedObject)
-{
-  // TODO: maybe move this out, don't require env but require evaluated Object
-  return SCM_FALSE;
-}
-
 // forward declaration of continuation parts
 static Continuation* beginSyntax_Part1();
 static Continuation* defineSyntax_Part1();
@@ -43,6 +35,16 @@ static Continuation* divFunction_Part1();
 
 // BUILTIN SYNTAX
 
+/**
+ * Prints the help text of a builtin function or syntax
+ * or the formatted code of a user define function. Prints the
+ * value of other objects. If no argument is specified, show all
+ * bindings of the current environment.
+ * Expects parameters from the argument Stack.
+ * @param env environment from which to get the bindings
+ * @param argumentCons the object the user requests help for
+ * @returns VOID
+ */
 Continuation* helpSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: helpSyntax");
@@ -86,22 +88,26 @@ Continuation* helpSyntax()
   t_RETURN(SCM_VOID);
 }
 
+/**
+ * Define a new variable in a given environment.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to define the variable
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return continuation to either defineSyntax_Part1 or defineLambda
+ */
 Continuation* defineSyntax()
 {
-  // Environment& env, scm::Object* arguments
-  /**
-   * Define a new variable in a given environment
-   * @param env: the environment in which to define the variable
-   * @param argumentCons: the arguments of the operation as a cons object
-   * @return a scm::Object with the result of the operation
-   */
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: defineSyntax");
+  // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
+
   Object *symbol, *value;
+
   if (argumentCons == SCM_NIL) {
     schemeThrow("define takes exactyly 2 arguments");
   }
+  // get key of definition
   symbol = getCar(argumentCons);
   if (!isOneOf(symbol, {TAG_SYMBOL, TAG_CONS})) {
     schemeThrow("can only define symbols or functions");
@@ -109,7 +115,7 @@ Continuation* defineSyntax()
 
   // shorthand lambda definition!
   // if symbol is a cons, treat it like a lambda declaration
-  // (funcname var1 var2 ...) (value)
+  // (define (funcname var1 var2 ...) (body))
   if (hasTag(symbol, TAG_CONS)) {
     // push arguments required for next part
     pushArgs({env, getCar(symbol)});
@@ -132,17 +138,33 @@ Continuation* defineSyntax()
   }
 }
 
+/**
+ * Continuation of defineSyntax, does the actual defining
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to define the variable
+ * @param symbol: the key of the definition
+ * @return VOID
+ */
 static Continuation* defineSyntax_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: defineSyntax Part1");
+  // get arguments from argument stack
   Environment* env{popArg<Environment*>()};
   Object* symbol{popArg<Object*>()};
+  // get evaluated value of definition
   Object* value{lastReturnValue};
 
   define(*env, symbol, value);
   t_RETURN(SCM_VOID)
 }
 
+/**
+ * Set a new variable in a given environment and all of its parents.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return continuation to setSyntax_Part1
+ */
 Continuation* setSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: setSyntax");
@@ -169,6 +191,13 @@ Continuation* setSyntax()
   return tCall(cont(evaluate), cont(setSyntax_Part1), {env, expression});
 }
 
+/**
+ * Continuation of setSyntax, does the actual setting
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param symbol: the key of the definition
+ * @return VOID
+ */
 static Continuation* setSyntax_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: setSyntax_Part1");
@@ -180,6 +209,13 @@ static Continuation* setSyntax_Part1()
   t_RETURN(value);
 }
 
+/**
+ * Return the unevaluated first argument of the expression.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return the first argument
+ */
 Continuation* quoteSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: quoteSyntax");
@@ -190,12 +226,22 @@ Continuation* quoteSyntax()
   t_RETURN(quoted);
 }
 
+/**
+ * Return the first expression if a condition is true, second one otherwise.
+ * Expects arguments as pop from argument stack.
+ * This part handles the evaluation of the condition.
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return one of the expressions
+ */
 Continuation* ifSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: ifSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
   Object *condition, *trueExpression, *falseExpression;
+
+  // get all required Objects
   try {
     condition = getCar(argumentCons);
     argumentCons = getCdr(argumentCons);
@@ -216,6 +262,14 @@ Continuation* ifSyntax()
   return tCall(cont(evaluate), cont(ifSyntax_Part1), {env, condition});
 }
 
+/**
+ * Continuation of ifSyntax. Returns the correct expression based on the value
+ * of the previously evaluated condition.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param symbol: the key of the definition
+ * @return VOID
+ */
 static Continuation* ifSyntax_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: ifSyntax Part1");
@@ -261,11 +315,21 @@ static Continuation* ifSyntax_Part1()
   return tCall(cont(evaluate), {env, expression});
 }
 
+/**
+ * Evaluate a body of expressions and return the last result.
+ * Expects arguments as pop from argument stack.
+ * This part only starts the process!
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return one of the expressions
+ */
 Continuation* beginSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: beginSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
+  // because of this check we need to split the function
+  // SCM_NIL is required as check for the end of cons objects
   if (argumentCons == SCM_NIL) {
     t_RETURN(SCM_VOID);
   }
@@ -274,6 +338,13 @@ Continuation* beginSyntax()
   }
 }
 
+/**
+ * Continuation of beginSyntax, does the actual evaluation and loop.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @return one of the expressions
+ */
 static Continuation* beginSyntax_Part1()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: beginSyntax Part1");
@@ -283,6 +354,7 @@ static Continuation* beginSyntax_Part1()
   Object* currentExpression = getCar(argumentCons);
   argumentCons = getCdr(argumentCons);
 
+  // check if we're finished
   if (argumentCons == SCM_NIL) {
     // evaluate last expression in begin block and return
     return tCall(cont(evaluate), {env, currentExpression});
@@ -294,11 +366,22 @@ static Continuation* beginSyntax_Part1()
   }
 }
 
+/**
+ * Create a new user defined function.
+ * Expects arguments as pop from argument stack.
+ * @param env: the environment in which to start
+ * @param argumentCons: the arguments of the operation as a cons object
+ * @see defineSyntax
+ * @return one of the expressions
+ */
 Continuation* lambdaSyntax()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: lambdaSyntax");
+  // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
+
+  // try to get argument list and body list from arguments
   Object *argList, *bodyList;
   try {
     argList = getCar(argumentCons);
@@ -313,14 +396,13 @@ Continuation* lambdaSyntax()
 
 // BUILTIN FUNCTIONS
 
+/**
+ * Function that handles the addition or concatenation of multiple scm::Objects
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return a new scm::Object* with the result of the computation
+ */
 Continuation* addFunction()
 {
-  /**
-   * Function that handles the addition or concatenation of multiple scm::Objects
-   * @param stack: stack containing scm::Object*, which are the prepared arguments
-   * @param nArgs: how many arguments the function should take
-   * @return a new scm::Object* with the result of the computation
-   */
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: addFunction");
   int nArgs{popArg<int>()};
   DLOG_IF_F(INFO, LOG_STACK_TRACE, "nArgs = %d", nArgs);
@@ -340,6 +422,7 @@ Continuation* addFunction()
   // else if any are floats, we handle these as float
   // defaults to integers
 
+  // case: at least one string
   if (std::any_of(arguments.begin(), arguments.end(), isString)) {
     auto lambda = [](std::string a, Object* b) {
       if (hasTag(b, TAG_STRING)) {
@@ -356,6 +439,7 @@ Continuation* addFunction()
     t_RETURN(newString(result));
   }
 
+  // case: at least one float
   else if (std::any_of(arguments.begin(), arguments.end(), isFloatingPoint)) {
     auto lambda = [](double a, Object* b) {
       if (hasTag(b, TAG_FLOAT)) {
@@ -369,6 +453,7 @@ Continuation* addFunction()
     t_RETURN(newFloat(result));
   }
 
+  // case: all are integers
   else {
     auto lambda = [](int a, Object* b) {
       int result = getIntValue(b) + a;
@@ -383,6 +468,11 @@ Continuation* addFunction()
   }
 }
 
+/**
+ * Function that handles the subtraction of one or more Objects.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return a new scm::Object* with the result of the computation
+ */
 Continuation* subFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: subFunction");
@@ -419,6 +509,11 @@ Continuation* subFunction()
   }
 }
 
+/**
+ * function that handles the multiplication of one or more numeric objects.
+ * @param nargs: how many arguments the function should take from the stack
+ * @return a new scm::object* with the result of the computation
+ */
 Continuation* multFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: multFunction");
@@ -450,7 +545,12 @@ Continuation* multFunction()
   }
 }
 
-// TODO: throw out, implement in scheme
+/**
+ * Function that handles the division of an Object by the product of one or more numeric Objects.
+ * This part calls the evaluation of the divisor.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return a continuation to multFunction and divFunction_Part1
+ */
 Continuation* divFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: divFunction");
@@ -461,6 +561,11 @@ Continuation* divFunction()
   return tCall(cont(multFunction), cont(divFunction_Part1), {nArgs - 1});
 }
 
+/**
+ * Continuation of divFunction. Gets evaluated divisor and applys division.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return a new scm::Object* with the result of the computation
+ */
 Continuation* divFunction_Part1()
 {
   Object* divisor{lastReturnValue};
@@ -482,41 +587,9 @@ Continuation* divFunction_Part1()
   t_RETURN(NULL);
 }
 
-Continuation* modFunction()
-{
-  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: modFunction");
-  int nArgs{popArg<int>()};
-  if (nArgs != 2) {
-    schemeThrow("modulo expects excactly 2 arguments");
-  }
-  Object* divisor{popArg<Object*>()};
-  Object* dividend{popArg<Object*>()};
-  if (!isNumeric(divisor) || !isNumeric(dividend)) {
-    schemeThrow("modulo only works with numbers");
-  }
-
-  if (isFloatingPoint(dividend) && isFloatingPoint(divisor)) {
-    t_RETURN(newFloat(std::fmod(getFloatValue(dividend), getFloatValue(divisor))));
-  }
-  else if (isFloatingPoint(dividend)) {
-    t_RETURN(
-        newFloat(std::fmod(getFloatValue(dividend), static_cast<double>(getIntValue(divisor)))));
-  }
-  else if (isFloatingPoint(divisor)) {
-    t_RETURN(
-        newFloat(std::fmod(static_cast<double>(getIntValue(dividend)), getFloatValue(divisor))));
-  }
-  else {
-    t_RETURN(newInteger(getIntValue(dividend) % getIntValue(divisor)));
-  }
-}
-
-// HIGHER ORDER FUNCTIONS
-
 /**
  * Call a given function with the specified arguments
- * @param stack the stack from which to pop the arguments
- * @param nArgs the number of arguments
+ * @param nArgs: how many arguments the function should take from the stack
  * @return the return value of the called function
  */
 Object* applyFunction()
@@ -525,6 +598,11 @@ Object* applyFunction()
   return SCM_NIL;
 }
 
+/**
+ * Perform pointer comparison of two objects.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return SCM_TRUE or SCM_False dependent on result
+ */
 Continuation* eqFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: eqFunction");
@@ -534,6 +612,11 @@ Continuation* eqFunction()
   t_RETURN((a == b) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks if the string values of two string objects are the same.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return SCM_TRUE or SCM_False dependent on result
+ */
 Continuation* equalStringFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: equalStringFunction");
@@ -548,6 +631,11 @@ Continuation* equalStringFunction()
   }
 }
 
+/**
+ * Checks if the numeric values of two Objects are the same.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return SCM_TRUE or SCM_False dependent on result
+ */
 Continuation* equalNumberFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: equalNumberFunction");
@@ -571,32 +659,11 @@ Continuation* equalNumberFunction()
   }
 }
 
-//  TODO: implment this in scheme!
-Continuation* equalFunction()
-{
-  int nArgs{popArg<int>()};
-  ObjectVec arguments{popArgs<Object*>(nArgs)};
-  schemeThrow("equal? is currently not implemented, write it yourself!");
-  // Object* b{popArg<Object*>()};
-  // Object* a{popArg<Object*>()};
-  // if (isNumeric(a) && isNumeric(b)) {
-  //   push(stack, {a, b});
-  //   return equalNumberFunction(stack, nArgs);
-  // }
-  // else if (getTag(a) != getTag(b)) {
-  //   return SCM_FALSE;
-  // }
-  // else if (isString(a) && isString(b)) {
-  //   return (getStringValue(a) == getStringValue(b)) ? SCM_TRUE : SCM_FALSE;
-  // }
-  // else if (hasTag(a, TAG_CONS) && hasTag(b, TAG_CONS)) {
-  //   schemeThrow("cons comparison not implemented yet!");
-  // }
-  // else {
-  //   schemeThrow("cannot compare objects " + toString(a) + " and " + toString(b));
-  // }
-}
-
+/**
+ * Checks if the numeric values of the first object is greater than that of the scond.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return SCM_TRUE or SCM_False dependent on result
+ */
 Continuation* greaterThanFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: greaterThanFunction");
@@ -620,6 +687,11 @@ Continuation* greaterThanFunction()
   }
 }
 
+/**
+ * Checks if the numeric values of the first object is lesser than that of the scond.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @return SCM_TRUE or SCM_False dependent on result
+ */
 Continuation* lesserThanFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: lesserThanFunction");
@@ -643,6 +715,11 @@ Continuation* lesserThanFunction()
   }
 }
 
+/**
+ * Constructs a cons object out of a passed car and cdr.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns the new cons object
+ */
 Continuation* consFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: consFunction");
@@ -652,6 +729,11 @@ Continuation* consFunction()
   t_RETURN(newCons(car, cdr));
 }
 
+/**
+ * Gets the car of a specified cons object
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns the car object
+ */
 Continuation* carFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: carFunction");
@@ -663,6 +745,11 @@ Continuation* carFunction()
   t_RETURN(getCar(cons));
 }
 
+/**
+ * Gets the cdr of a specified cons object
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns the cdr object
+ */
 Continuation* cdrFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: cdrFunction");
@@ -674,6 +761,11 @@ Continuation* cdrFunction()
   t_RETURN(getCdr(cons));
 }
 
+/**
+ * Creates a new cons object from the passed arguments.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns the cons object
+ */
 Continuation* listFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: listFunction");
@@ -686,6 +778,11 @@ Continuation* listFunction()
   t_RETURN(rest);
 }
 
+/**
+ * Prints the passed argument to the console.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns VOID
+ */
 Continuation* displayFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: displayFunction");
@@ -698,6 +795,11 @@ Continuation* displayFunction()
   t_RETURN(SCM_VOID);
 }
 
+/**
+ * Returns the function body of the passed user defined function.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns VOID
+ */
 Continuation* functionBodyFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: functionBodyFunction");
@@ -709,6 +811,11 @@ Continuation* functionBodyFunction()
   t_RETURN(getUserFunctionBodyList(obj));
 }
 
+/**
+ * Returns the argument list of the passed user defined function.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns VOID
+ */
 Continuation* functionArglistFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: functionArglistFunction");
@@ -720,6 +827,11 @@ Continuation* functionArglistFunction()
   t_RETURN(getUserFunctionArgList(obj));
 }
 
+/**
+ * Checks whether the argument is a string.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isStringFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isStringFunction");
@@ -728,6 +840,11 @@ Continuation* isStringFunction()
   t_RETURN((isString(obj)) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks whether the argument is a number.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isNumberFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isNumberFunction");
@@ -736,6 +853,11 @@ Continuation* isNumberFunction()
   t_RETURN((isNumeric(obj)) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks whether the argument is a cons object.
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isConsFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isConsFunction");
@@ -744,6 +866,11 @@ Continuation* isConsFunction()
   t_RETURN((hasTag(obj, TAG_CONS)) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks whether the argument is a builtin function
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isBuiltinFunctionFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isBuiltinFunctionFunction");
@@ -752,6 +879,11 @@ Continuation* isBuiltinFunctionFunction()
   t_RETURN((hasTag(obj, TAG_FUNC_BUILTIN)) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks whether the argument is a user defined function
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isUserFunctionFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isUserFunctionFunction");
@@ -760,6 +892,12 @@ Continuation* isUserFunctionFunction()
   t_RETURN((hasTag(obj, TAG_FUNC_USER)) ? SCM_TRUE : SCM_FALSE);
 }
 
+/**
+ * Checks whether the argument is a user real schem boolean
+ * (i.e. not 1 , "asd" or + but #t or #f).
+ * @param nArgs: how many arguments the function should take from the stack
+ * @returns SCM_TRUE or SCM_FALSE
+ */
 Continuation* isBoolFunction()
 {
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: isBoolFunction");

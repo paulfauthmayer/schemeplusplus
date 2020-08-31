@@ -19,7 +19,6 @@ Continuation* addFunction();
 Continuation* subFunction();
 Continuation* multFunction();
 Continuation* divFunction();
-Continuation* modFunction();
 Continuation* eqFunction();
 // Continuation* equalFunction();
 Continuation* equalStringFunction();

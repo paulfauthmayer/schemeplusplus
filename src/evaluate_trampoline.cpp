@@ -181,9 +181,6 @@ static Continuation* evaluateBuiltinFunction()
     case FUNC_DIV:
       return divFunction();
       break;
-    case FUNC_MOD:
-      return modFunction();
-      break;
     case FUNC_CONS:
       return consFunction();
       break;
