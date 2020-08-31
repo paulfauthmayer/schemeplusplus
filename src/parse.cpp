@@ -57,6 +57,7 @@ Object* interpretList(std::vector<std::string>::iterator& current)
 {
   Object *car, *cdr;
   if (*current == ")") {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as cons-end", (*current).c_str());
     return SCM_NIL;
   }
   car = interpretInput(current);
@@ -66,30 +67,47 @@ Object* interpretList(std::vector<std::string>::iterator& current)
 
 Object* interpretInput(std::vector<std::string>::iterator& current)
 {
-  if (isInt(*current))
+  if (isInt(*current)) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as integer", (*current).c_str());
     return newInteger(std::stoi(*current));
-  if (isFloat(*current))
+  }
+  if (isFloat(*current)) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as float", (*current).c_str());
     return newFloat(stof(*current));
-  else if (isString(*current))
+  }
+  else if (isString(*current)) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as string", (*current).c_str());
     return newString((*current).substr(1, (*current).length() - 2));
-  else if (*current == std::string("#t"))
+  }
+  else if (*current == std::string("#t")) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as boolean", (*current).c_str());
     return SCM_TRUE;
-  else if (*current == std::string("#f"))
+  }
+  else if (*current == std::string("#f")) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as boolean", (*current).c_str());
     return SCM_FALSE;
-  else if (*current == "(")
+  }
+  else if (*current == "(") {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as cons", (*current).c_str());
     return interpretList(++current);
+  }
   else if (*current == "'") {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as quote", (*current).c_str());
     Object* quoteContents{interpretInput(++current)};
     Object* cdr = (quoteContents == SCM_NIL) ? SCM_NIL : newCons(quoteContents, SCM_NIL);
     return newCons(newSymbol("quote"), cdr);
   }
   else if (*current == "exit!") {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as EOF", (*current).c_str());
     return SCM_EOF;
   }
-  else if (isSymbol(*current))
+  else if (isSymbol(*current)) {
+    DLOG_IF_F(INFO, LOG_PARSER, "interpret %s as symbol", (*current).c_str());
     return newSymbol(*current);
-  else
+  }
+  else {
     schemeThrow("{{" + *current + "}} could not be interpreted.");
+  }
 }
 
 bool canBeEvaluated(const std::vector<std::string>& v)
@@ -114,6 +132,7 @@ Object* readInput(std::istream* streamPtr, bool isFile)
   // read symbols until we have an evaluatable expression
   do {
     if (!std::getline(*streamPtr, line)) {
+      DLOG_IF_F(INFO, LOG_PARSER, "EOF of input file detected");
       return SCM_EOF;
     }
     // TODO: input stack!
@@ -133,7 +152,7 @@ Object* readInput(std::istream* streamPtr, bool isFile)
 
   std::vector<std::string>::iterator iter{elements.begin()};
   Object* obj{interpretInput(iter)};
-  DLOG_F(INFO, "read expression %s", toString(obj).c_str());
+  DLOG_IF_F(INFO, LOG_PARSER, "read expression %s", toString(obj).c_str());
   return obj;
 }
 
