@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <stack>
 #include "scheme.hpp"

@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include "environment.hpp"
 #include "scheme.hpp"
