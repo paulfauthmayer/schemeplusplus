@@ -16,7 +16,9 @@
 
 int main(int argc, char** argv)
 {
+  // intialise loguru
   loguru::init(argc, argv);
+
   // setup initial starting point
   scm::initializeSingletons();
   scm::Environment topLevelEnv{};
@@ -36,15 +38,16 @@ int main(int argc, char** argv)
   std::ifstream inputStream;
   bool isFile;
   switch (argc) {
+    // just use the standard input!
     case 1: {
-      // just use the standard input!
       DLOG_F(INFO, "using user input");
       isFile = false;
       streamPtr = &std::cin;
       break;
     }
+
+    // stream from a .scm file
     case 2: {
-      // redirect streambuffer of std::cin to the input file!
       DLOG_F(INFO, "parsing input file %s", argv[1]);
       isFile = true;
       inputStream.open(argv[1]);
