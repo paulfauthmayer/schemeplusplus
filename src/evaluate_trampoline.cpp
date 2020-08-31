@@ -367,8 +367,9 @@ static Continuation* evaluate_Part1()
                    cont(evaluateUserDefinedFunction),
                    {env, evaluatedOperation, argumentCons});
     default:
+      if (evaluatedOperation != NULL)
+        t_RETURN(evaluatedOperation);
       schemeThrow(toString(evaluatedOperation) + " doesn't exist");
-      break;
   }
 
   return NULL;
