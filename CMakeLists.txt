@@ -23,6 +23,9 @@ add_executable(scheme
   src/operations_trampoline.cpp
   src/trampoline.cpp
   src/environment.cpp
+  src/test.cpp
+  src/repl.cpp
+  src/setup.cpp
   include/loguru.cpp
   )
 
