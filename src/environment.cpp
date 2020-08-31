@@ -7,13 +7,11 @@
 #include "scheme.hpp"
 
 namespace scm {
-Object* getBinding(Environment& env, Object* key)
+Object* getBinding(Environment& env, std::string& key)
 {
   Environment* currentEnv = &env;
   while (currentEnv != NULL) {
-    auto lambda = [key](Object* binding) {
-      return (getStringValue(getCar(binding)) == getStringValue(key));
-    };
+    auto lambda = [key](Object* binding) { return (getStringValue(getCar(binding)) == key); };
     auto found = std::find_if(currentEnv->bindings.begin(), currentEnv->bindings.end(), lambda);
     if (found != currentEnv->bindings.end()) {
       return *found;
@@ -25,10 +23,22 @@ Object* getBinding(Environment& env, Object* key)
   return NULL;
 }
 
-Object* getVariable(Environment& env, Object* key)
+Object* getBinding(Environment& env, Object* key)
+{
+  std::string keyStr = getStringValue(key);
+  return getBinding(env, keyStr);
+}
+
+Object* getVariable(Environment& env, std::string& key)
 {
   Object* binding{getBinding(env, key)};
   return (binding != NULL) ? getCdr(binding) : NULL;
+}
+
+Object* getVariable(Environment& env, Object* key)
+{
+  std::string keyStr = getStringValue(key);
+  return getVariable(env, keyStr);
 }
 
 void define(Environment& env, Object* key, Object* value)

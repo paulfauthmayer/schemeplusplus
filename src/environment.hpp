@@ -16,11 +16,15 @@ class Environment {
   friend void define(Environment& env, Object* key, Object* value);
   friend void printEnv(Environment& env);
   friend Object* getBinding(Environment& env, Object* key);
+  friend Object* getBinding(Environment& env, std::string& key);
   friend Object* getVariable(Environment& env, Object* key);
+  friend Object* getVariable(Environment& env, std::string& key);
 };
 
 void define(Environment& env, Object* key, Object* value);
 void set(Environment& env, Object* key, Object* value);
+void printEnv(Environment& env);
 Object* getVariable(Environment& env, Object* key);
+Object* getVariable(Environment& env, std::string& key);
 
 }  // namespace scm
