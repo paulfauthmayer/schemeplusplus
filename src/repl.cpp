@@ -8,11 +8,19 @@
 
 namespace scm {
 
+/**
+ * The heart of this interpreter, the Read Eval Print Loop. Will read an expression,
+ * evaluate it and then return the result.
+ * @param env the top level environment of the repl
+ * @param streamPtr the stream from which to read
+ * @param isFile whether we're reading a file or user input
+ */
 void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
 {
   do {
     try {
       // READ
+      // line indicator for user input
       if (!isFile) {
         std::cout << "> ";
       }
@@ -26,6 +34,7 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
       scm::Object* value = scm::trampoline::evaluateExpression(env, expression);
 
       // PRINT
+      // void values should not be printed
       if (value != scm::SCM_VOID) {
         std::cout << "--> " << scm::toString(value) << std::endl;
       }
