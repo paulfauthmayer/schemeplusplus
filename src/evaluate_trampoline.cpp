@@ -41,7 +41,7 @@ Object* trampoline(Continuation* startFunction)
   }
   DLOG_IF_F(INFO,
             LOG_TRAMPOLINE_TRACE || LOG_STACK_TRACE,
-            "trampoline finised | returning %s | argStack: %d | funcStack: %d",
+            "trampoline finished | returning %s | argStack: %d | funcStack: %d",
             toString(lastReturnValue).c_str(),
             static_cast<int>(argumentStack.size()),
             static_cast<int>(functionStack.size()));
@@ -238,6 +238,9 @@ static Continuation* evaluateUserDefinedFunction()
     ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
 
     while (functionArguments != SCM_NIL) {
+      if (nArgs == 0) {
+        schemeThrow("to few arguments passed to function");
+      }
       Object* argName{getCar(functionArguments)};
       Object* argValue{evaluatedArguments[--nArgs]};
       define(*funcEnv, argName, argValue);
@@ -306,6 +309,7 @@ Continuation* evaluate()
     case scm::TAG_FALSE:
     case scm::TAG_TRUE:
     case scm::TAG_FUNC_BUILTIN:
+    case scm::TAG_EOF:
       t_RETURN(obj);  // TODO: continue implementation here
 
     case scm::TAG_SYMBOL: {
