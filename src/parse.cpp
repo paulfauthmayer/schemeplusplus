@@ -32,7 +32,7 @@ bool isString(std::string str)
 
 bool isSymbol(std::string str)
 {
-  std::regex pattern(R"(^[^\s^\d]\S*$)");
+  std::regex pattern(R"(^[^\s^\d^.^\-^']\S*$|^\-$)");
   return std::regex_match(str, pattern);
 }
 
