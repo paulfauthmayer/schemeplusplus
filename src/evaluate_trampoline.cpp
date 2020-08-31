@@ -97,6 +97,7 @@ static Continuation* evaluateArguments()
   }
   else {
     // todo: do we need to push stacksizeatstart here?
+    pushArgs({env, operation, stackSizeAtStart});
     return popFunc();
   }
 };
@@ -134,7 +135,6 @@ static Continuation* evaluateBuiltinFunction()
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
-  printArgStack();
   DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
   if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
     schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
@@ -229,21 +229,29 @@ static Continuation* evaluateUserDefinedFunction()
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
-  ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
 
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
-  Object* lastBodyResult;
   Environment* funcEnv{new Environment(getUserFunctionParentEnv(function))};
 
-  while (functionArguments != SCM_NIL) {
-    Object* argName{getCar(functionArguments)};
-    Object* argValue{evaluatedArguments[--nArgs]};
-    define(*funcEnv, argName, argValue);
-    functionArguments = getCdr(functionArguments);
+  if (nArgs > 0) {
+    ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
+
+    while (functionArguments != SCM_NIL) {
+      Object* argName{getCar(functionArguments)};
+      Object* argValue{evaluatedArguments[--nArgs]};
+      define(*funcEnv, argName, argValue);
+      functionArguments = getCdr(functionArguments);
+    }
   }
 
-  return tCall(cont(evaluate), {funcEnv, functionBody});
+  // body may be a single expression or multiple!
+  if (hasTag(getCar(functionBody), TAG_CONS)) {
+    return tCall(cont(beginSyntax), {funcEnv, functionBody});
+  }
+  else {
+    return tCall(cont(evaluate), {funcEnv, functionBody});
+  }
 }
 
 static Continuation* evaluateSyntax()
