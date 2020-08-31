@@ -112,9 +112,6 @@ Object* readInput(std::istream* streamPtr, bool isFile)
   std::string line;
 
   // read symbols until we have an evaluatable expression
-  if (!isFile) {
-    std::cout << "> ";
-  }
   do {
     if (!std::getline(*streamPtr, line)) {
       return SCM_EOF;
@@ -125,6 +122,13 @@ Object* readInput(std::istream* streamPtr, bool isFile)
     elements.insert(elements.end(),
                     std::make_move_iterator(split.begin()),
                     std::make_move_iterator(split.end()));
+    // wrap expression in parantheses for lazy typists
+    // will f.ex. turn `+ 1 2 3` into `(+ 1 2 3)`
+    if (elements.size() && isSymbol(elements[0]) && elements[0] != "(") {
+      DLOG_IF_F(INFO, LOG_PARSER, "wrapping expression in parantheses");
+      elements.insert(elements.begin(), "(");
+      elements.push_back(")");
+    }
   } while (!canBeEvaluated(elements) || elements.empty());
 
   std::vector<std::string>::iterator iter{elements.begin()};
