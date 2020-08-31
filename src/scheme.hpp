@@ -33,6 +33,7 @@ enum FunctionTag {
   SYNTAX_IF,
   SYNTAX_SET,
   SYNTAX_BEGIN,
+  SYNTAX_HELP,
 
   FUNC_ADD,
   FUNC_SUB,
