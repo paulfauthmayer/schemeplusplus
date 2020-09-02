@@ -52,7 +52,9 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
       if (value != scm::SCM_VOID) {
         std::cout << "--> " << scm::toString(value) << std::endl;
       }
-      std::cout << '\n';
+      if (!isFile) {
+        std::cout << '\n';
+      }
     }
     catch (scm::schemeException& e) {
       std::cerr << e.what() << '\n';
