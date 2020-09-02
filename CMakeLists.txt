@@ -55,6 +55,7 @@ else()
     -Wshadow
     -Wsign-conversion
     -Wunused
-    -pthread
     )
 endif()
+
+target_link_libraries(scheme pthread)
