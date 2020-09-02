@@ -32,6 +32,31 @@ void initializeEvaluationStacks()
 }
 
 /**
+ * This starts our function trampoline, which is done as a means of tail call optimization.
+ * Instead of calling functinons recursively, we push them to a stack of function pointers,
+ * which is then worked through one after another.
+ * @param startFunction the first function of our trampoline
+ * @result returns the last value returned by one of the called functions
+ */
+Object* trampoline(Continuation* startFunction)
+{
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: trampoline");
+  Continuation* nextFunction{startFunction};
+  pushFunc(NULL);
+  while (nextFunction != NULL) {
+    DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: trampoline loop");
+    nextFunction = (Continuation*)(*nextFunction)();
+  }
+  DLOG_IF_F(INFO,
+            LOG_TRAMPOLINE_TRACE || LOG_STACK_TRACE,
+            "trampoline finished | returning %s | argStack: %d | funcStack: %d",
+            toString(lastReturnValue).c_str(),
+            static_cast<int>(argumentStack.size()),
+            static_cast<int>(functionStack.size()));
+  return lastReturnValue;
+}
+
+/**
  * Return the next function to run, push the function after the next one to the stack
  * and push the required arguments for the next function to the stack.
  * @param nextFunc the next function to call

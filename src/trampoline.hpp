@@ -22,6 +22,7 @@ extern FunctionStack functionStack;
 // finished function
 extern Object* lastReturnValue;
 
+Object* trampoline(Continuation* startFunction);
 Continuation* tCall(Continuation* nextFunc,
                     Continuation* nextPart = NULL,
                     std::vector<ArgumentTypeVariant> arguments = {});
