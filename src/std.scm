@@ -49,7 +49,7 @@
     (if (and (string? x) (string? y))
         (equal-string? x y)
         (if (and (number? x) (number? y))
-            (= 0 0)
+            (= x y)
             #f)))
 
 (define max

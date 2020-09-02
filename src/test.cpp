@@ -1,4 +1,5 @@
 #include "test.hpp"
+#include <math.h>
 #include <cassert>
 #include <fstream>
 #include <iostream>
@@ -17,6 +18,28 @@ namespace scm {
 static Environment testEnv{};
 
 // helpers
+
+/**
+ * Checks whether the two values can be treated as equal.
+ * Used to get around floating point errors during testin.
+ * The values are treated equal if they're in a certain epsilon to one another.
+ * IMPORTANT: never ever ever use this outside of a scenario you can't control.
+ * It's fine during testing but seriously, don't use this!
+ * @param a the first value
+ * @param b the second value
+ * @returns whether the values are similar enough to each other in order to be treated equal
+ */
+template <typename T>
+bool equalFloatValue(T a, T b)
+{
+  return fabs(a - b) < 0.001;
+}
+
+/**
+ * Evaluate an input string in the test environment.
+ * @param inputString the string to be evaluated
+ * @returns the result of the evaluation, EOF on fail
+ */
 Object* evaluateString(const std::string& inputString)
 {
   try {
@@ -28,197 +51,196 @@ Object* evaluateString(const std::string& inputString)
   catch (const schemeException& e) {
     std::cerr << e.what() << '\n';
   }
-  return NULL;
+  return SCM_EOF;
 }
 
+/**
+ * Test a given expression, compare the result against the
+ * expected result and log the conclusion.
+ * @param inputString the expression(s) to be evaluated
+ * @param expectedOutput the expected output of the expression
+ * @param message a message describing the purpose of the test
+ */
 void testExpression(const std::string& inputString,
                     const std::string& expectedOutput,
-                    std::string message)
+                    const std::string message)
 {
   Object* result = evaluateString(inputString);
-  assert(toString(result) == expectedOutput && message.c_str());
+  std::string strResult{toString(result)};
+  // cut off quotation marks
+  if (hasTag(result, TAG_STRING)) {
+    strResult = strResult.substr(1, strResult.length() - 2);
+  }
+  bool correctResult{strResult == expectedOutput};
+  if (correctResult) {
+    DLOG_IF_F(INFO, LOG_TESTS, "%s", message.c_str());
+  }
+  else {
+    LOG_F(ERROR,
+          "%s | expected: %s | got: %s",
+          message.c_str(),
+          expectedOutput.c_str(),
+          strResult.c_str());
+  }
 }
 
+/** @overload */
 void testExpression(const std::string& inputString, int expectedOutput, std::string message)
 {
   Object* result = evaluateString(inputString);
-  assert(getIntValue(result) == expectedOutput && message.c_str());
+  bool correctResult{getIntValue(result) == expectedOutput};
+  if (correctResult) {
+    DLOG_IF_F(INFO, LOG_TESTS, "%s", message.c_str());
+  }
+  else {
+    LOG_F(
+        ERROR, "%s | expected: %d | got: %d", message.c_str(), expectedOutput, getIntValue(result));
+  }
 }
 
+/** @overload */
 void testExpression(const std::string& inputString, double expectedOutput, std::string message)
 {
   Object* result = evaluateString(inputString);
-  assert(getFloatValue(result) == expectedOutput && message.c_str());
+  bool correctResult{equalFloatValue((getFloatValue(result)), expectedOutput)};
+  if (correctResult) {
+    DLOG_IF_F(INFO, LOG_TESTS, "%s", message.c_str());
+  }
+  else {
+    LOG_F(ERROR,
+          "%s | expected: %f | got: %f",
+          message.c_str(),
+          expectedOutput,
+          getFloatValue(result));
+  }
 }
 
+/** @overload */
+void testExpression(const std::string& inputString, Object* expectedOutput, std::string message)
+{
+  Object* result = evaluateString(inputString);
+  bool correctResult{result == expectedOutput};
+  if (correctResult) {
+    DLOG_IF_F(INFO, LOG_TESTS, "%s", message.c_str());
+  }
+  else {
+    LOG_F(ERROR,
+          "%s | expected: %s | got: %s",
+          message.c_str(),
+          toString(expectedOutput).c_str(),
+          toString(result).c_str());
+  }
+}
+
+/**
+ * Run a number of tests to check whether everything works as expected.
+ * @param env An environment to test in, will create a copy in order not to change anything in the
+ * original. All functions and syntax needs to be setup in order for these tests to work.
+ */
 void runTests(const Environment& env)
 {
   // setup environment for testing
   testEnv = env;
-  Object* result;
-  std::string inputString{"(help)"};
-  std::string varName = "a";
-  int expected_int;
-  double expected_double;
-  std::string expected_string;
 
   // parsing
-  inputString = "1";
-  result = evaluateString(inputString);
-  assert(hasTag(result, TAG_INT) && "did not correctly read integer");
-
-  inputString = "-1";
-  result = evaluateString(inputString);
-  assert(getIntValue(result) == -1 && "did not correctly read negative interger");
-
-  inputString = "1.5";
-  result = evaluateString(inputString);
-  assert(hasTag(result, TAG_FLOAT) && "did not correctly read float");
-
-  inputString = ".5";
-  result = evaluateString(inputString);
-  assert(hasTag(result, TAG_FLOAT) && "did not correctly read . float");
-
-  inputString = "1.5";
-  result = evaluateString(inputString);
-  assert(hasTag(result, TAG_FLOAT) && "did not correctly read negative float");
-
-  inputString = "1.5";
-  result = evaluateString(inputString);
-  assert(getFloatValue(result) == 1.5 && "did not correctly read float value");
-
-  inputString = "'()";
-  result = evaluateString(inputString);
-  assert(result == SCM_NIL && "parser: nil");
-
-  inputString = "'(1 2 3)";
-  result = evaluateString(inputString);
-  assert(toString(result) == "( 1 2 3 )" && "parser: quoted list");
+  testExpression("15", 15, "test | parser: integer");
+  testExpression("-15", -15, "test | parser: negative integer");
+  testExpression("1.5", 1.5, "test | parser: float");
+  testExpression(".5", 0.5, "test | parser: dotted float");
+  testExpression("-1.5", -1.5, "test | parser: negative float");
+  testExpression("'()", SCM_NIL, "test | parser: nil");
+  testExpression("+ 1 2 3", 6, "test | parser: wrap in parantheses");
 
   // memory
 
-  /// evaluation
+  // evaluation
 
-  // syntax
-
-  // define and lambdas
-  inputString = "(define a 10)";
-  result = evaluateString(inputString);
-  varName = "a";
-  assert(getIntValue(getVariable(testEnv, varName)) == 10 && "syntax: define variables");
-
-  inputString = "(define a (lambda (x) (+ x 1)))";
-  result = evaluateString(inputString);
-  varName = "a";
-  assert(hasTag(getVariable(testEnv, varName), TAG_FUNC_USER) && "syntax: define lambdas");
-
-  inputString = "(define (b x) (+ x 1))";
-  result = evaluateString(inputString);
-  varName = "b";
-  assert(hasTag(getVariable(testEnv, varName), TAG_FUNC_USER) && "syntax: define lambdas");
-
-  // quote
-  inputString = "(quote 1 2 3)";
-  result = evaluateString(inputString);
-  assert(toString(result) == "1" && "syntax: quote first arg");
-
-  inputString = "(quote (1 2 3))";
-  result = evaluateString(inputString);
-  assert(toString(result) == "( 1 2 3 )" && "syntax: quote list");
-
-  // if
-  inputString = "(if #t 1 2)";
-  result = evaluateString(inputString);
-  assert(toString(result) == "1" && "syntax: if true");
-
-  inputString = "(if #f 1 2)";
-  result = evaluateString(inputString);
-  assert(toString(result) == "2" && "syntax: if false");
-
-  inputString = "(if (> 2 4) 1 2)";
-  result = evaluateString(inputString);
-  assert(toString(result) == "2" && "syntax: if expression");
+  /// syntax
 
   // begin
-  inputString =
-      "(begin \
-  (+ 1 1)\
-  (+ 2 2))";
-  result = evaluateString(inputString);
-  assert(toString(result) == "4" && "syntax: begin");
+  testExpression("(begin (+ 1 1) (+ 2 2))", 4, "test | syntax: begin");
+
+  // define and lambdas
+  evaluateString("(define a 10)");
+  testExpression("a", 10, "test | syntax: define");
+
+  evaluateString("(define plus1 (lambda (x) (+ x 1)))");
+  testExpression("(plus1 1)", 2, "test | syntax: define lambdas");
+
+  evaluateString("(define (minus1 x) (- x 1))");
+  testExpression("(minus1 3)", 2, "test | syntax: define shorthand lambdas");
+
+  // quote
+  testExpression("(quote 1)", 1, "test | syntax: quote single value");
+  testExpression("(quote 1 2 3)", 1, "test | syntax: quote first value");
+  testExpression("(quote (1 2 3))", "( 1 2 3 )", "test | syntax: quote list");
+  testExpression("'(1 2 3)", "( 1 2 3 )", "test | syntax: shorthand quote list");
+
+  // if
+  testExpression("(if #t 1 2)", 1, "test | syntax: if true");
+  testExpression("(if #f 1 2)", 2, "test | syntax: if false");
+  testExpression("(if (> 2 4) 1 2)", 2, "test | syntax: if expression");
 
   // set!
-  inputString = "(set! set-example1 10)";
-  result = evaluateString(inputString);
-  varName = "set-example1";
-  assert(getIntValue(getVariable(testEnv, varName)) == 10 && "syntax: define variables");
-
-  inputString = "(define (a x) (set! set-example2 10) (+ x 2))";
-  result = evaluateString(inputString);
-  inputString = "(a 2)";
-  result = evaluateString(inputString);
-  varName = "set-example2";
-  assert(getVariable(testEnv, varName) != NULL && "syntax: set! variables");
+  testExpression("(begin (set! a 10) (a))", 10, "test | syntax: set");
+  testExpression(
+      "(begin \
+  (define (a x) (set! set-example2 10) (+ x 2))\
+  (a 2)\
+  (set-example2))\
+  ",
+      10,
+      "test | syntax: set in function");
 
   // addition
-  inputString = "(+ 11 22)";
-  result = evaluateString(inputString);
-  assert(getIntValue(result) == 33 && "integer additon");
-
-  inputString = "(+ 1.1 2.2)";
-  result = evaluateString(inputString);
-  assert(static_cast<int>(getFloatValue(result) * 10) == 33 && "float addition");
-
-  inputString = "(+ \"hello \" \"world!\")";
-  result = evaluateString(inputString);
-  assert(getStringValue(result) == "hello world!" && "string addition");
-
-  inputString = "(+ 1.1 2)";
-  result = evaluateString(inputString);
-  assert(static_cast<int>(getFloatValue(result) * 10) == 31 && "mixed numeric addition");
-
-  inputString = "(+ \"hello \" 1 \" world!\")";
-  result = evaluateString(inputString);
-  assert(getStringValue(result) == "hello 1 world!" && "string addition");
-
-  inputString = "(+ \"hello \" 1 \" world!\")";
-  result = evaluateString(inputString);
-  assert(getStringValue(result) == "hello 1 world!" && "string addition");
+  testExpression("(+ 1 2)", 3, "test | func: integer additon");
+  testExpression("(+ 1.1 2)", 3.1, "test | func: mixed additon");
+  testExpression("(+ 1.1 2.2)", 3.3, "test | func: float additon");
+  testExpression("(+ \"hello \" \"world!\")", "hello world!", "test | func: string additon");
+  testExpression(
+      "(+ \"hello \" 1 \" world!\")", "hello 1 world!", "test | func: mixed string additon");
 
   // subtraction
-  inputString = "(- 1 2)";
-  result = evaluateString(inputString);
-  assert(getIntValue(result) == -1 && "integer subtraction");
-
-  inputString = "(- 1 2.5)";
-  result = evaluateString(inputString);
-  assert(static_cast<int>(getFloatValue(result) * 10) == -15 && "float subtraction");
+  testExpression("(- 1 2)", -1, "test | func: integer subtraction");
+  testExpression("(- 1 2.5)", -1.5, "test | func: float subtraction");
+  testExpression("(- 1)", -1, "test | func: negate integer");
 
   // division
-  inputString = "(/ 4 2)";
-  result = evaluateString(inputString);
-  assert(getFloatValue(result) == 2 && "func: integer division");
-
-  inputString = "(/ 5 2)";
-  result = evaluateString(inputString);
-  assert(getFloatValue(result) == 2.5 && "func: integer division with float result");
-
-  inputString = "(/ 5 2.5)";
-  result = evaluateString(inputString);
-  assert(getFloatValue(result) == 2 && "func: mixed division");
-
-  inputString = "(/ 5 2.5)";
-  result = evaluateString(inputString);
-  assert(getFloatValue(result) == 2.0 && "func: mixed division");
+  testExpression("(/ 4 2)", 2.0, "test | func: integer division");
+  testExpression("(/ 5 2)", 2.5, "test | func: integer division with float result");
+  testExpression("(/ 5 2.5)", 2.0, "test | func: mixed division");
 
   // modulo
-  inputString = "(% 5 2.5)";
-  expected_double = 0;
-  testExpression(inputString, expected_double, "func: 0 modulo");
+  testExpression("(% 5 2.5)", 0.0, "test | func: module zero remainder");
+  testExpression("(% 5 1.5)", 0.5, "test | func: module non-zero remainder");
 
-  inputString = "(% 5 2)";
-  expected_int = 1;
-  testExpression(inputString, expected_int, "func: 0 modulo");
+  // comparisons
+  testExpression("(> 4 2)", SCM_TRUE, "test | func: greater than true");
+  testExpression("(> 2 2)", SCM_FALSE, "test | func: greater than false");
+  testExpression("(< 1 2)", SCM_TRUE, "test | func: lesser than true");
+  testExpression("(< 4 2)", SCM_FALSE, "test | func: lesser than false");
+  testExpression("(= 2 2)", SCM_TRUE, "test | func: equal number integer");
+  testExpression("(= 2.0 2.0)", SCM_TRUE, "test | func: equal number float");
+  testExpression("(= 2.0 2)", SCM_TRUE, "test | func: equal number mixed");
+  testExpression("(eq? nil nil)", SCM_TRUE, "test | func: eq? true");
+  testExpression("(eq? 1 1)", SCM_FALSE, "test | func: eq? false");
+  testExpression("(equal? 1 1)", SCM_TRUE, "test | func: equal? integer true");
+  testExpression("(equal? 1.0 1.0)", SCM_TRUE, "test | func: equal? float true");
+  testExpression("(equal? 1.0 1)", SCM_TRUE, "test | func: equal? mixed true");
+  testExpression("(equal? \"asdf\" \"asdf\")", SCM_TRUE, "test | func: equal? string true");
+  testExpression("(equal? 1 10)", SCM_FALSE, "test | func: equal? integer false");
+  testExpression("(equal? 8.0 1.0)", SCM_FALSE, "test | func: equal? float false");
+  testExpression("(equal? 1.2 1)", SCM_FALSE, "test | func: equal? mixed false");
+  testExpression("(equal? \"hello!\" \"asdf\")", SCM_FALSE, "test | func: equal? string false");
+
+  // type checks
+  testExpression("(number? 42)", SCM_TRUE, "test | func: is number true");
+  testExpression("(number? 42.0)", SCM_TRUE, "test | func: is number true float");
+  testExpression("(number? #t)", SCM_FALSE, "test | func: is number false");
+  testExpression("(string? \"42\")", SCM_TRUE, "test | func: is string true");
+  testExpression("(string? #t)", SCM_FALSE, "test | func: is string false");
+  testExpression("(cons? '(1 2 3))", SCM_TRUE, "test | func: is cons true");
+  testExpression("(cons? 1)", SCM_FALSE, "test | func: is cons false");
 
   // TODO: to be continued ...
 }
