@@ -1,6 +1,7 @@
 # Scheme++
 
-![scmpp](media/schemeplusplus.svg)
+![scmpp](media/schemeplusplus.png)
+
 ## Build Instructions
 
 The build process should be relatively straight foreward, thanks to the included CMake instructions.
