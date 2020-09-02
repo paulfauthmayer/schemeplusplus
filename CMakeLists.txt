@@ -58,4 +58,5 @@ else()
     )
 endif()
 
-target_link_libraries(scheme pthread)
+target_link_libraries(scheme ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(scheme dl)
