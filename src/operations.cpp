@@ -59,8 +59,8 @@ Continuation* helpSyntax()
       switch (getCar(argumentCons)->tag) {
         case TAG_SYMBOL: {
           variable = getVariable(*env, getCar(argumentCons));
+          std::cout << "======== " << toString(getCar(argumentCons)) << " ========\n";
           switch (variable->tag) {
-            std::cout << "======== " << toString(getCar(argumentCons)) << " ========\n";
             case TAG_FUNC_BUILTIN:
             case TAG_SYNTAX:
               std::cout << getBuiltinFuncHelpText(variable) << '\n';
