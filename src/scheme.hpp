@@ -156,4 +156,7 @@ extern bool LOG_TRAMPOLINE_TRACE;
 extern bool LOG_STACK_TRACE;
 extern bool LOG_PARSER;
 extern bool LOG_MEMORY;
+extern bool LOG_TESTS;
+extern bool LOG_ENVIRONMENT;
+extern bool LOG_EVALUATION;
 }  // namespace scm

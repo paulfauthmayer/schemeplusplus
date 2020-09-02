@@ -52,6 +52,7 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
       if (value != scm::SCM_VOID) {
         std::cout << "--> " << scm::toString(value) << std::endl;
       }
+      std::cout << '\n';
     }
     catch (scm::schemeException& e) {
       std::cerr << e.what() << '\n';
@@ -124,5 +125,6 @@ void printWelcome()
   printCentered("Welcome to Scheme++");
   printCentered("Version 1.0.0");
   printCentered("paulfauthmayer 2020");
+  std::cout << "\n\n";
 }
 }  // namespace scm

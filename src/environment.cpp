@@ -81,17 +81,26 @@ Object* getVariable(Environment& env, Object* key)
  */
 void define(Environment& env, Object* key, Object* value)
 {
-  DLOG_F(INFO, "define %s := %s", toString(key).c_str(), toString(value).c_str());
+  DLOG_IF_F(
+      INFO, LOG_ENVIRONMENT, "define %s := %s", toString(key).c_str(), toString(value).c_str());
   auto currentDefinition = getBinding(env, key);
   // if binding doesn't exist yet create a new one
   if (currentDefinition == NULL) {
-    DLOG_F(INFO, "define new variable %s := %s", toString(key).c_str(), toString(value).c_str());
+    DLOG_IF_F(INFO,
+              LOG_ENVIRONMENT,
+              "define new variable %s := %s",
+              toString(key).c_str(),
+              toString(value).c_str());
     Object* definition{newCons(key, value)};
     env.bindings.push_back(definition);
   }
   // if binding does exist set the old value to the new value
   else {
-    DLOG_F(INFO, "redefine variable %s := %s", toString(key).c_str(), toString(value).c_str());
+    DLOG_IF_F(INFO,
+              LOG_ENVIRONMENT,
+              "redefine variable %s := %s",
+              toString(key).c_str(),
+              toString(value).c_str());
     std::get<ConsValue>(currentDefinition->value).cdr = value;
   }
 }

@@ -137,10 +137,13 @@ bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes)
 }
 
 // enable logging for certain parts of the interpreter
-bool LOG_TRAMPOLINE_TRACE = true;
-bool LOG_STACK_TRACE = true;
-bool LOG_PARSER = true;
-bool LOG_MEMORY = true;
+bool LOG_ENVIRONMENT = 0;
+bool LOG_EVALUATION = 1;
+bool LOG_MEMORY = 0;
+bool LOG_PARSER = 0;
+bool LOG_STACK_TRACE = 0;
+bool LOG_TESTS = 0;
+bool LOG_TRAMPOLINE_TRACE = 0;
 
 // other helper functions
 

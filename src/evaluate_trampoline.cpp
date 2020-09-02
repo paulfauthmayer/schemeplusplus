@@ -158,7 +158,10 @@ static Continuation* evaluateBuiltinFunction()
   Object* function{popArg<Object*>()};
   int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
 
-  DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
+  DLOG_IF_F(INFO,
+            LOG_TRAMPOLINE_TRACE,
+            "evaluate builtin function %s",
+            getBuiltinFuncName(function).c_str());
   // catch wrong number of arguments
   if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
     schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
@@ -373,10 +376,11 @@ Continuation* evaluate()
       if (!evaluatedObj) {
         schemeThrow("undefined variable: " + std::get<std::string>(obj->value));
       }
-      DLOG_F(INFO,
-             "evaluated variable %s to %s",
-             toString(obj).c_str(),
-             toString(evaluatedObj).c_str());
+      DLOG_IF_F(INFO,
+                LOG_EVALUATION,
+                "evaluated variable %s to %s",
+                toString(obj).c_str(),
+                toString(evaluatedObj).c_str());
       t_RETURN(evaluatedObj);
     }
     case scm::TAG_CONS: {
@@ -411,10 +415,11 @@ static Continuation* evaluate_Part1()
   // get previously evaluated operation
   Object* evaluatedOperation{lastReturnValue};
   Object* argumentCons{getCdr(obj)};
-  DLOG_F(INFO,
-         "operation: %s arguments: %s",
-         toString(getCar(obj)).c_str(),
-         toString(argumentCons).c_str());
+  DLOG_IF_F(INFO,
+            LOG_EVALUATION,
+            "operation: %s arguments: %s",
+            toString(getCar(obj)).c_str(),
+            toString(argumentCons).c_str());
 
   switch (evaluatedOperation->tag) {
     case TAG_FUNC_BUILTIN:

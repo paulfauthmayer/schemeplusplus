@@ -221,7 +221,6 @@ Continuation* quoteSyntax()
   DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: quoteSyntax");
   Environment* env{popArg<Environment*>()};
   Object* argumentCons{popArg<Object*>()};
-  DLOG_F(INFO, "quote arg: %s", toString(argumentCons).c_str());
   Object* quoted = (hasTag(argumentCons, TAG_CONS)) ? getCar(argumentCons) : argumentCons;
   t_RETURN(quoted);
 }
@@ -386,7 +385,6 @@ Continuation* lambdaSyntax()
   try {
     argList = getCar(argumentCons);
     bodyList = getCdr(argumentCons);
-    DLOG_F(INFO, "new lambda %s => %s", toString(argList).c_str(), toString(bodyList).c_str());
   }
   catch (std::bad_variant_access& e) {
     schemeThrow("lambda requires at least two arguments: (lambda {argument} {body})");

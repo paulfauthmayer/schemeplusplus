@@ -12,18 +12,20 @@
 #include "setup.hpp"
 #include "test.hpp"
 
-#define DEBUG
-
 int main(int argc, char** argv)
 {
   // intialise loguru
+#ifndef NDEBUG
+  loguru::g_stderr_verbosity = loguru::Verbosity_INFO;
+#else
+  loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+#endif
   loguru::init(argc, argv);
 
   // setup initial starting point
   scm::initializeSingletons();
   scm::Environment topLevelEnv{};
   scm::setupEnvironment(topLevelEnv);
-  std::cout << "scheme interpreter version " << 0.1 << '\n';
 
   // run function setup for those written in scheme
   std::ifstream functionDefinitionStream;
@@ -40,7 +42,7 @@ int main(int argc, char** argv)
   switch (argc) {
     // just use the standard input!
     case 1: {
-      DLOG_F(INFO, "using user input");
+      DLOG_IF_F(INFO, scm::LOG_PARSER, "using user input");
       isFile = false;
       streamPtr = &std::cin;
       break;
@@ -48,7 +50,7 @@ int main(int argc, char** argv)
 
     // stream from a .scm file
     case 2: {
-      DLOG_F(INFO, "parsing input file %s", argv[1]);
+      DLOG_IF_F(INFO, scm::LOG_PARSER, "parsing input file %s", argv[1]);
       isFile = true;
       inputStream.open(argv[1]);
       if (!inputStream)
