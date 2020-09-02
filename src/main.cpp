@@ -29,7 +29,18 @@ int main(int argc, char** argv)
 
   // run function setup for those written in scheme
   std::ifstream functionDefinitionStream;
-  functionDefinitionStream.open("/Users/paul/repos/uni/dipl/src/std.scm");
+  std::string executableLocationString{argv[0]};
+  // get correct file path dependent on os
+  std::string executableParentDir;
+#if defined(__APPLE__) || defined(__unix__)
+  executableParentDir =
+      executableLocationString.substr(0, executableLocationString.find_last_of("/"));
+  functionDefinitionStream.open(executableParentDir + "/std.scm");
+#elif defined(_WIN32) || defined(_WIN64)
+  executableParentDir =
+      executableLocationString.substr(0, executableLocationString.find_last_of("\\"));
+  functionDefinitionStream.open(executableParentDir + "\\std.scm");
+#endif
   scm::repl(topLevelEnv, reinterpret_cast<std::istream*>(&functionDefinitionStream), true);
 
   // run unit tests, will crash if any tests fail!

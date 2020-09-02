@@ -35,6 +35,9 @@ target_compile_features(scheme PRIVATE cxx_std_20)
 # include header directories
 target_include_directories(scheme PUBLIC src include)
 
+# copy other files to build directory
+configure_file("${CMAKE_SOURCE_DIR}/src/std.scm" "${CMAKE_BINARY_DIR}/std.scm" COPYONLY)
+
 # set warning levels for compilation this is different for windows machines
 if(MSVC)
   add_compile_options(/W4)
