@@ -98,7 +98,7 @@ void setupEnvironment(Environment& env)
   helpText =
       "subtracts the sum of multiple numbers from the first argument\n\
   (- 1 2 3) -> 4\n\
-  (+ 1 2 2.5) -> 3.5";
+  (- 1 2 2.5) -> 3.5";
   defineNewBuiltinFunction(env, "-", -1, FUNC_SUB, helpText);
   helpText =
       "multiplies all arguments with each other\n\

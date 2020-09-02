@@ -63,6 +63,8 @@ int main(int argc, char** argv)
   }
 
   // start the REPL
+  if (!isFile)
+    scm::printWelcome();
   scm::repl(topLevelEnv, streamPtr, isFile);
 
   return 0;

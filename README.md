@@ -1,6 +1,8 @@
 # Scheme++
 
+![scmpp](media/schemeplusplus.svg)
 ## Build Instructions
+
 The build process should be relatively straight foreward, thanks to the included CMake instructions.
 I used a Macbook running macOS Catalina 10.15.6 during the development of this interpreter.
 Thus I cannot vouch for any other operating systems but I don't see why it shouldn't work :)
@@ -37,7 +39,7 @@ Please also note that this was my first time writing anything substantial in C++
         (display "general kenobi!")
         (+ x 1))
 
-    ;; is restructured to
+    ;; is treated like
 
     (define plus1
       (lambda  (x)
@@ -51,6 +53,7 @@ Please also note that this was my first time writing anything substantial in C++
   * except for [loguru](https://github.com/emilk/loguru), an awesome, simple logging library, I'm staying clear of any non-standard libraries. In parts for simplicity, in other parts because I wanted to learn the language and not specific libraries.
 
 ---
+
 ## Functionality
 
 * a range of data types
@@ -61,7 +64,7 @@ Please also note that this was my first time writing anything substantial in C++
 
     ```scheme
     + 1 2 3  
-    ;; get's expanded to
+    ;; gets expanded to
     ( + 1 2 3 )
     ```
 
@@ -177,7 +180,7 @@ Please also note that this was my first time writing anything substantial in C++
 ### In Process
 
 * code optimisation
-* garbage collection via reference counting
+* garbage collection
 * full unit test coverage
 
 ---
@@ -185,7 +188,9 @@ Please also note that this was my first time writing anything substantial in C++
 ## Wanna Dos
 
 * curses based interface
-  * text manipulation is not great (can't move the curser left or right except via deleting the current input
-  * can't push arrow up to get past input
+  * text manipulation is atm not great (can't move the curser left or right except via deleting the current input
+  * can't press up to get past input
+  * limited possibilities for visualization
+  * no tab-completion
   * implement whole UI in a curses library could make this a lot more usable
 * new vector data type
