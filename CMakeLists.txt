@@ -54,5 +54,7 @@ else()
     -Wpedantic
     -Wshadow
     -Wsign-conversion
-    -Wunused)
+    -Wunused
+    -pthread
+    )
 endif()
