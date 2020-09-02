@@ -28,7 +28,7 @@ add_executable(scheme
   )
 
 # tell clang to use c++17 standard
-target_compile_features(scheme PRIVATE cxx_std_20)
+target_compile_features(scheme PRIVATE cxx_std_17)
 
 # include header directories
 target_include_directories(scheme PUBLIC src include)
