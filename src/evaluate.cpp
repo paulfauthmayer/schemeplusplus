@@ -1,9 +1,9 @@
+#include "evaluate.hpp"
 #include <functional>
 #include <iostream>
 #include <loguru.hpp>
 #include <stack>
 #include "environment.hpp"
-#include "evaluate.hpp"
 #include "memory.hpp"
 #include "operations.hpp"
 #include "scheme.hpp"
@@ -59,16 +59,15 @@ static Continuation* evaluateArguments()
   Object* argumentCons{popArg<Object*>()};
 
   // keep track of how many arguments were evaluated
-  int argCount;
-  std::size_t stackSizeAtStart{argumentStack.size()};
+  int nArgs{0};
 
   if (argumentCons != SCM_NIL) {
     // push arguments for evaluateArgunents_Part1
     pushArgs({
         env,
         operation,
-        argumentCons,     // function arguments
-        stackSizeAtStart  // local variables
+        argumentCons,  // function arguments
+        ++nArgs        // local variables
     });
     // push and call evaluate on current argument
     Object* currentArgument{getCar(argumentCons)};
@@ -76,7 +75,7 @@ static Continuation* evaluateArguments()
   }
   else {
     // todo: do we need to push stacksizeatstart here?
-    pushArgs({env, operation, stackSizeAtStart});
+    pushArgs({env, operation, nArgs});
     return popFunc();
   }
 };
@@ -97,7 +96,7 @@ static Continuation* evaluateArguments_Part1()
   Environment* env = popArg<Environment*>();
   Object* operation = popArg<Object*>();
   Object* argumentCons = popArg<Object*>();
-  std::size_t stackSizeAtStart = popArg<std::size_t>();
+  int nArgs = popArg<int>();
 
   // get evaluated object and store on stack for later functions
   pushArg(lastReturnValue);
@@ -107,12 +106,12 @@ static Continuation* evaluateArguments_Part1()
   if (argumentCons != SCM_NIL) {
     Object* nextArg{getCar(argumentCons)};
     // arguments for evaluateArguments_Part1
-    pushArgs({env, operation, argumentCons, stackSizeAtStart});
+    pushArgs({env, operation, argumentCons, ++nArgs});
     // call evaluation for next argument
     return tCall(cont(evaluate), cont(evaluateArguments_Part1), {env, nextArg});
   }
   else {
-    pushArgs({env, operation, stackSizeAtStart});
+    pushArgs({env, operation, nArgs});
     return popFunc();
   }
 };
@@ -131,7 +130,7 @@ static Continuation* evaluateBuiltinFunction()
   // get arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
-  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+  int nArgs{popArg<int>()};
 
   DLOG_IF_F(INFO,
             LOG_TRAMPOLINE_TRACE,
@@ -233,7 +232,7 @@ static Continuation* evaluateUserDefinedFunction()
   // pop arguments from stack
   Environment* env{popArg<Environment*>()};
   Object* function{popArg<Object*>()};
-  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+  int nArgs{popArg<int>()};
 
   // get arguments and list of expressions
   Object* functionArguments{getUserFunctionArgList(function)};
