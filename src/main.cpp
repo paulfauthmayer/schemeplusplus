@@ -4,7 +4,6 @@
 #include <loguru.hpp>
 #include "environment.hpp"
 #include "evaluate.hpp"
-#include "evaluate_trampoline.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
 #include "repl.hpp"

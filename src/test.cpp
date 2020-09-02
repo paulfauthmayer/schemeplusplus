@@ -4,9 +4,9 @@
 #include <fstream>
 #include <iostream>
 #include <loguru.hpp>
-#include "evaluate_trampoline.hpp"
+#include "evaluate.hpp"
 #include "memory.hpp"
-#include "operations_trampoline.hpp"
+#include "operations.hpp"
 #include "parse.hpp"
 #include "repl.hpp"
 #include "scheme.hpp"

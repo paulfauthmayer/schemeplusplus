@@ -19,8 +19,6 @@ add_executable(scheme
   src/parse.cpp 
   src/evaluate.cpp 
   src/operations.cpp
-  src/evaluate_trampoline.cpp 
-  src/operations_trampoline.cpp
   src/trampoline.cpp
   src/environment.cpp
   src/test.cpp

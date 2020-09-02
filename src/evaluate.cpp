@@ -1,223 +1,340 @@
-#include "evaluate.hpp"
+#include <functional>
 #include <iostream>
 #include <loguru.hpp>
 #include <stack>
 #include "environment.hpp"
+#include "evaluate.hpp"
 #include "memory.hpp"
 #include "operations.hpp"
 #include "scheme.hpp"
+#include "trampoline.hpp"
 
 namespace scm {
+namespace trampoline {
 
-// define a stack that can hold multiple objects!
-static ObjectStack argumentStack{};
+// Macros
+// we frequently need to convert a funciton Pointer to a Continuation Pointer
+#define cont(x) (Continuation*)(x)
 
-Object* pop(ObjectStack& stack)
-{
-  /**
-   * Pops and returns the topmost element of a given ObjectStack
-   * @param stack the stack from which to pop
-   * @returns the popped scm::Object*
-   */
-  if (stack.empty()) {
-    schemeThrow("trying to pop from empty stack");
+#define t_RETURN(rVal)      \
+  {                         \
+    lastReturnValue = rVal; \
+    return popFunc();       \
   }
-  Object* obj{stack.top()};
-  DLOG_F(INFO,
-         "popped {%s}, %d values remain on stack. next: %s",
-         toString(obj).c_str(),
-         stack.size(),
-         toString(stack.top()).c_str());
-  stack.pop();
-  return obj;
-}
 
-ObjectVec popN(ObjectStack& stack, int n)
+/**
+ * This function is used as a wrapper for our trampoline in order to
+ * obfuscate it from the main REPL.
+ * @param env The top level environment used for the evaluation
+ * @param expression The expression to be evaluated
+ * @returns the result of the expression
+ */
+Object* evaluateExpression(Environment& env, Object* expression)
 {
-  /**
-   * Pops and returns the topmost N elements of a given ObjectStack
-   * @param stack the stack from which to pop
-   * @param n the amount of values popped
-   * @returns the popped objects in a ObjectVec
-   */
-  DLOG_F(INFO, "popping %d values from stack", n);
-  if (stack.size() < n)
-    schemeThrow("stack doesn't contain " + std::to_string(n) + " arguments!");
-  ObjectVec values;
-  for (int i{0}; i < n; i++) {
-    values.push_back(pop(stack));
-  }
-  return values;
-}
-
-inline void push(ObjectStack& stack, Object* obj)
-{
-  stack.push(obj);
-}
-
-void push(ObjectStack& stack, ObjectVec objects)
-{
-  for (auto i = objects.rbegin(); i != objects.rend(); i++) {
-    push(stack, *i);
-  }
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateExpression");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "expression: %s", toString(expression).c_str());
+  pushArgs({&env, expression});
+  return trampoline(cont(evaluate));
 }
 
 // evaluate functions and syntax
-static int evaluateArguments(Environment& env, Object* arguments)
-{
-  /**
-   * Evaluates a list of arguments and stores them on the argument stack
-   */
-  std::size_t initialSize{argumentStack.size()};
-  while (arguments != SCM_NIL) {
-    auto currentArguement = getCar(arguments);
-    argumentStack.push(evaluate(env, currentArguement));
-    arguments = getCdr(arguments);
-  }
-  return argumentStack.size() - initialSize;
-}
 
-static Object* evaluateBuiltinFunction(Environment& env,
-                                       scm::Object* function,
-                                       scm::Object* arguments)
+// forward declaration of the following functions parts
+static Continuation* evaluateArguments_Part1();
+/**
+ * Evaluates the argument cons object that used to be passed to functions and
+ * stores them in the argument stack.
+ * Expects parameters as pop form the argument stack
+ * @param env Environment in which to evaluate the arguments
+ * @param operation the currently evaluated operation
+ * @param argumentCons the lis of arguments as a cons Object
+ * @returns the next step in our trampoline
+ */
+static Continuation* evaluateArguments()
 {
-  DLOG_F(INFO, "evaluate builtin function %s", getBuiltinFuncName(function).c_str());
-  int nArgs = evaluateArguments(env, arguments);
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateArguments");
+  // get arguments from stack
+  Environment* env{popArg<Environment*>()};
+  Object* operation{popArg<Object*>()};
+  Object* argumentCons{popArg<Object*>()};
+
+  // keep track of how many arguments were evaluated
+  int argCount;
+  std::size_t stackSizeAtStart{argumentStack.size()};
+
+  if (argumentCons != SCM_NIL) {
+    // push arguments for evaluateArgunents_Part1
+    pushArgs({
+        env,
+        operation,
+        argumentCons,     // function arguments
+        stackSizeAtStart  // local variables
+    });
+    // push and call evaluate on current argument
+    Object* currentArgument{getCar(argumentCons)};
+    return tCall(cont(evaluate), cont(evaluateArguments_Part1), {env, currentArgument});
+  }
+  else {
+    // todo: do we need to push stacksizeatstart here?
+    pushArgs({env, operation, stackSizeAtStart});
+    return popFunc();
+  }
+};
+
+/**
+ * The continuation of evaluateArguments.
+ * Is called again and again until all arguments have ben evaluated and pushed to the stack.
+ * Expects parameters as pop form the argument stack
+ * @param env Environment in which to evaluate the arguments
+ * @param operation the currently evaluated operation
+ * @param argumentCons the lis of arguments as a cons Object
+ * @returns the next step in our trampoline
+ */
+static Continuation* evaluateArguments_Part1()
+{
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateArguments Part1");
+  // get variables from stack
+  Environment* env = popArg<Environment*>();
+  Object* operation = popArg<Object*>();
+  Object* argumentCons = popArg<Object*>();
+  std::size_t stackSizeAtStart = popArg<std::size_t>();
+
+  // get evaluated object and store on stack for later functions
+  pushArg(lastReturnValue);
+
+  // "loop" with next argument or return
+  argumentCons = getCdr(argumentCons);
+  if (argumentCons != SCM_NIL) {
+    Object* nextArg{getCar(argumentCons)};
+    // arguments for evaluateArguments_Part1
+    pushArgs({env, operation, argumentCons, stackSizeAtStart});
+    // call evaluation for next argument
+    return tCall(cont(evaluate), cont(evaluateArguments_Part1), {env, nextArg});
+  }
+  else {
+    pushArgs({env, operation, stackSizeAtStart});
+    return popFunc();
+  }
+};
+
+/**
+ * Evaluates a builtin function and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param function the currently evaluated function
+ * @param nArgs the number of Arguments to be popped from the argument stack
+ * @returns the next function in the function stack
+ */
+static Continuation* evaluateBuiltinFunction()
+{
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateBuiltinFunction");
+  // get arguments from stack
+  Environment* env{popArg<Environment*>()};
+  Object* function{popArg<Object*>()};
+  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+
+  DLOG_IF_F(INFO,
+            LOG_TRAMPOLINE_TRACE,
+            "evaluate builtin function %s",
+            getBuiltinFuncName(function).c_str());
+  // catch wrong number of arguments
   if (nArgs != getBuiltinFuncNArgs(function) && getBuiltinFuncNArgs(function) != -1) {
     schemeThrow("function " + getBuiltinFuncName(function) + " expects " +
                 std::to_string(getBuiltinFuncNArgs(function)) + " arguments, got " +
                 std::to_string(nArgs) + '\n');
   }
+
+  // push arguments required for evaluation of builtin functions
+  pushArg(nArgs);
   switch (getBuiltinFuncTag(function)) {
     case FUNC_ADD:
-      return addFunction(argumentStack, nArgs);
+      return addFunction();
       break;
     case FUNC_SUB:
-      return subFunction(argumentStack, nArgs);
+      return subFunction();
       break;
     case FUNC_MULT:
-      return multFunction(argumentStack, nArgs);
+      return multFunction();
       break;
     case FUNC_DIV:
-      return divFunction(argumentStack, nArgs);
+      return divFunction();
       break;
     case FUNC_CONS:
-      return consFunction(argumentStack, nArgs);
+      return consFunction();
       break;
     case FUNC_CAR:
-      return carFunction(argumentStack, nArgs);
+      return carFunction();
       break;
     case FUNC_CDR:
-      return cdrFunction(argumentStack, nArgs);
+      return cdrFunction();
       break;
     case FUNC_EQ:
-      return eqFunction(argumentStack, nArgs);
+      return eqFunction();
+      break;
+    case FUNC_EQUAL_STRING:
+      return equalStringFunction();
       break;
     case FUNC_EQUAL_NUMBER:
-      return equalNumberFunction(argumentStack, nArgs);
+      return equalNumberFunction();
       break;
     case FUNC_GT:
-      return greaterThanFunction(argumentStack, nArgs);
+      return greaterThanFunction();
       break;
     case FUNC_LT:
-      return lesserThanFunction(argumentStack, nArgs);
+      return lesserThanFunction();
       break;
     case FUNC_DISPLAY:
-      return displayFunction(argumentStack, nArgs);
+      return displayFunction();
       break;
     case FUNC_LIST:
-      return listFunction(argumentStack, nArgs);
+      return listFunction();
       break;
     case FUNC_FUNCTION_BODY:
-      return functionBodyFunction(argumentStack, nArgs);
+      return functionBodyFunction();
       break;
     case FUNC_FUNCTION_ARGLIST:
-      return functionArglistFunction(argumentStack, nArgs);
+      return functionArglistFunction();
       break;
     case FUNC_IS_STRING:
-      return isStringFunction(argumentStack, nArgs);
+      return isStringFunction();
       break;
     case FUNC_IS_NUMBER:
-      return isNumberFunction(argumentStack, nArgs);
+      return isNumberFunction();
       break;
     case FUNC_IS_CONS:
-      return isConsFunction(argumentStack, nArgs);
+      return isConsFunction();
       break;
     case FUNC_IS_FUNC:
-      return isBuiltinFunctionFunction(argumentStack, nArgs);
+      return isBuiltinFunctionFunction();
       break;
     case FUNC_IS_USERFUNC:
-      return isUserFunctionFunction(argumentStack, nArgs);
+      return isUserFunctionFunction();
       break;
     case FUNC_IS_BOOL:
-      return isBoolFunction(argumentStack, nArgs);
+      return isBoolFunction();
       break;
     default:
       schemeThrow("undefined builtin function: " + toString(function));
       break;
   }
-  // this will never be returned!
-  return SCM_VOID;
 }
 
-static Object* evaluateUserDefinedFunction(Environment& env,
-                                           scm::Object* function,
-                                           scm::Object* argumentCons)
+/**
+ * Evaluate a user defined function object and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param function the currently evaluated function
+ * @param nArgs the number of Arguments to be popped from the argument stack
+ * @returns the next function in the function stack
+ */
+static Continuation* evaluateUserDefinedFunction()
 {
-  DLOG_F(INFO, "evaluate user defined function");
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateUserDefinedFunction");
+  // pop arguments from stack
+  Environment* env{popArg<Environment*>()};
+  Object* function{popArg<Object*>()};
+  int nArgs{static_cast<int>(argumentStack.size() - popArg<std::size_t>() - 1)};
+
+  // get arguments and list of expressions
   Object* functionArguments{getUserFunctionArgList(function)};
   Object* functionBody{getUserFunctionBodyList(function)};
-  Object* lastBodyResult;
-  Environment funcEnv{getUserFunctionParentEnv(function)};
+  Environment* funcEnv{new Environment(getUserFunctionParentEnv(function))};
 
-  int nArgs = evaluateArguments(env, argumentCons);
-  ObjectVec evaluatedArguments{popN(argumentStack, nArgs)};
-  while (functionArguments != SCM_NIL) {
-    Object* argName{getCar(functionArguments)};
-    Object* argValue{evaluatedArguments[--nArgs]};
-    define(funcEnv, argName, argValue);
-    functionArguments = getCdr(functionArguments);
+  if (nArgs == 0 && functionArguments != SCM_NIL) {
+    schemeThrow("to few arguments passed to function, type `(help fname)` for more information");
   }
 
-  return evaluate(funcEnv, functionBody);
+  if (nArgs > 0) {
+    ObjectVec evaluatedArguments{popArgs<Object*>(nArgs)};
+
+    // define all function arguments in the function environment
+    while (functionArguments != SCM_NIL) {
+      if (nArgs == 0) {
+        schemeThrow(
+            "to few arguments passed to function, type `(help fname)` for more information");
+      }
+      Object* argName{getCar(functionArguments)};
+      Object* argValue{evaluatedArguments[--nArgs]};
+      define(*funcEnv, argName, argValue);
+      functionArguments = getCdr(functionArguments);
+    }
+  }
+
+  // body may be a single expression or multiple!
+  if (hasTag(getCar(functionBody), TAG_CONS)) {
+    return tCall(cont(beginSyntax), {funcEnv, functionBody});
+  }
+  else {
+    return tCall(cont(evaluate), {funcEnv, functionBody});
+  }
 }
 
-static Object* evaluateSyntax(Environment& env, scm::Object* syntax, scm::Object* arguments)
+/**
+ * Evaluate a syntax object and writes the result to `lastReturnValue`.
+ * Expects parameters as pop form the argument stack.
+ * @param env Environment in which to evaluate the arguments
+ * @param syntax the currently evaluated syntax
+ * @param arguments the arguments passed to the syntax
+ * @returns the next function in the function stack
+ */
+static Continuation* evaluateSyntax()
 {
-  DLOG_F(INFO, "evaluate builtin syntax %s", toString(syntax).c_str());
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluateSyntax");
+  // pop required arguments
+  Environment* env{popArg<Environment*>()};
+  Object* syntax{popArg<Object*>()};
+  Object* arguments{popArg<Object*>()};
+
+  // check if syntax really is a syntax
   if (!hasTag(syntax, TAG_SYNTAX)) {
     schemeThrow(toString(syntax) + " isn't a valid syntax");
   }
+
+  // push arguments required for syntax evaluation
+  pushArgs({env, arguments});
   switch (getBuiltinFuncTag(syntax)) {
     case SYNTAX_QUOTE:
-      return quoteSyntax(arguments);
+      return quoteSyntax();
       break;
     case SYNTAX_LAMBDA:
-      return lambdaSyntax(env, arguments);
+      return lambdaSyntax();
       break;
     case SYNTAX_DEFINE:
-      return defineSyntax(env, arguments);
+      return defineSyntax();
       break;
     case SYNTAX_IF:
-      return ifSyntax(env, arguments);
+      return ifSyntax();
       break;
     case SYNTAX_SET:
-      return setSyntax(env, arguments);
+      return setSyntax();
       break;
     case SYNTAX_BEGIN:
-      return beginSyntax(env, arguments);
+      return beginSyntax();
       break;
+    case SYNTAX_HELP:
+      return helpSyntax();
     default:
       schemeThrow("undefined syntax: " + toString(syntax));
       break;
   }
-  return SCM_VOID;
 }
 
-scm::Object* evaluate(Environment& env, scm::Object* obj)
+static Continuation* evaluate_Part1();
+/**
+ * Evaluates the next object on the stack
+ * Expects parameters as pop from the argument stack.
+ * @param env the environment in which tho evaluate the object
+ * @param obj the object to be evaluated
+ * @returns the next function on the function stack or another continuation function
+ */
+Continuation* evaluate()
 {
-  scm::Object* evaluatedObj;
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate");
+  // get current environment and expression from their stacks
+  Environment* env{popArg<Environment*>()};
+  Object* obj{popArg<Object*>()};
 
+  scm::Object* evaluatedObj;
   switch (obj->tag) {
     case scm::TAG_INT:
     case scm::TAG_FLOAT:
@@ -226,51 +343,81 @@ scm::Object* evaluate(Environment& env, scm::Object* obj)
     case scm::TAG_FALSE:
     case scm::TAG_TRUE:
     case scm::TAG_FUNC_BUILTIN:
-      return obj;
-      break;
+    case scm::TAG_EOF:
+      t_RETURN(obj);  // TODO: continue implementation here
 
     case scm::TAG_SYMBOL: {
-      DLOG_F(INFO, "getting variable %s", toString(obj).c_str());
-      evaluatedObj = getVariable(env, obj);
+      evaluatedObj = getVariable(*env, obj);
       if (!evaluatedObj) {
         schemeThrow("undefined variable: " + std::get<std::string>(obj->value));
       }
-      DLOG_F(INFO,
-             "evaluated variable %s to %s",
-             toString(obj).c_str(),
-             toString(evaluatedObj).c_str());
-      return evaluatedObj;
-      break;
+      DLOG_IF_F(INFO,
+                LOG_EVALUATION,
+                "evaluated variable %s to %s",
+                toString(obj).c_str(),
+                toString(evaluatedObj).c_str());
+      t_RETURN(evaluatedObj);
     }
     case scm::TAG_CONS: {
       Object* operation{getCar(obj)};
-      Object* arguments{getCdr(obj)};
-      DLOG_F(INFO,
-             "operation: %s arguments: %s",
-             toString(operation).c_str(),
-             toString(arguments).c_str());
-      Object* evaluatedOperation = evaluate(env, operation);
-      switch (evaluatedOperation->tag) {
-        case TAG_FUNC_BUILTIN:
-          return evaluateBuiltinFunction(env, evaluatedOperation, arguments);
-          break;
-        case TAG_SYNTAX:
-          return evaluateSyntax(env, evaluatedOperation, arguments);
-          break;
-        case TAG_FUNC_USER:
-          return evaluateUserDefinedFunction(env, evaluatedOperation, arguments);
-          break;
-        default:
-          schemeThrow(toString(evaluatedOperation) + " doesn't exist");
-          break;
-      }
-      break;
+      // reason for split: Object* evaluatedOperation = evaluate(env, operation);
+      // push arguments for evaluate_Part1
+      pushArgs({env, obj});
+      // push arguments for evaluate and return
+      // this evaluates the operation and finally stores it in the return value container
+      return tCall(cont(evaluate), cont(evaluate_Part1), {env, operation});
     }
     default:
       schemeThrow("evaluation not yet implemented for " + scm::toString(obj));
   }
-
-  return SCM_NIL;
 }
 
+/**
+ * Continuation of evaluate, handles evaluation of functions and syntax.
+ * Writes restul to `lastReturnValue`.
+ * Expects parameters as pop from the argument stack.
+ * @param env the environment in which tho evaluate the object
+ * @param obj the object to be evaluated
+ * @returns the next function on the function stack or another continuation function
+ */
+static Continuation* evaluate_Part1()
+{
+  DLOG_IF_F(INFO, LOG_TRAMPOLINE_TRACE, "in: evaluate part1");
+  // get arguments from stack
+  Environment* env{popArg<Environment*>()};
+  Object* obj{popArg<Object*>()};
+
+  // get previously evaluated operation
+  Object* evaluatedOperation{lastReturnValue};
+  Object* argumentCons{getCdr(obj)};
+  DLOG_IF_F(INFO,
+            LOG_EVALUATION,
+            "operation: %s arguments: %s",
+            toString(getCar(obj)).c_str(),
+            toString(argumentCons).c_str());
+
+  switch (evaluatedOperation->tag) {
+    case TAG_FUNC_BUILTIN:
+      // evaluate arguments first then continue with function evaluation
+      return tCall(cont(evaluateArguments),
+                   cont(evaluateBuiltinFunction),
+                   {env, evaluatedOperation, argumentCons});
+    case TAG_SYNTAX:
+      return tCall(cont(evaluateSyntax), {env, evaluatedOperation, argumentCons});
+    case TAG_FUNC_USER:
+      // evaluate arguments first then continue with function evaluation
+      return tCall(cont(evaluateArguments),
+                   cont(evaluateUserDefinedFunction),
+                   {env, evaluatedOperation, argumentCons});
+    default:
+      // this is effectively the same as quote!
+      if (evaluatedOperation != NULL)
+        t_RETURN(evaluatedOperation);
+      schemeThrow(toString(evaluatedOperation) + " doesn't exist");
+  }
+
+  return NULL;
+}
+
+}  // namespace trampoline
 }  // namespace scm

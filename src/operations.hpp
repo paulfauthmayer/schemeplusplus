@@ -1,41 +1,45 @@
+#pragma once
 #include <iostream>
 #include <stack>
 #include "scheme.hpp"
 namespace scm {
+namespace trampoline {
 
 // SYNTAX
-Object* defineSyntax(Environment& env, Object* arguments);
-Object* setSyntax(Environment& env, Object* argumentCons);
-Object* quoteSyntax(Object* argumentCons);
-Object* ifSyntax(Environment& env, Object* argumentCons);
-Object* beginSyntax(Environment& env, Object* argumentCons);
-Object* lambdaSyntax(Environment& env, Object* argumentCons);
+Continuation* defineSyntax();
+Continuation* setSyntax();
+Continuation* quoteSyntax();
+Continuation* ifSyntax();
+Continuation* beginSyntax();
+Continuation* lambdaSyntax();
+Continuation* helpSyntax();
 
 // BUILTIN FUNCTIONS
-Object* addFunction(ObjectStack& stack, int nArgs);
-Object* subFunction(ObjectStack& stack, int nArgs);
-Object* multFunction(ObjectStack& stack, int nArgs);
-Object* divFunction(ObjectStack& stack, int nArgs);
-Object* modFunction(ObjectStack& stack, int nArgs);
-Object* eqFunction(ObjectStack& stack, int nArgs);
-Object* equalFunction(ObjectStack& stack, int nArgs);
-Object* equalNumberFunction(ObjectStack& stack, int nArgs);
-Object* greaterThanFunction(ObjectStack& stack, int nArgs);
-Object* lesserThanFunction(ObjectStack& stack, int nArgs);
-Object* consFunction(ObjectStack& stack, int nArgs);
-Object* carFunction(ObjectStack& stack, int nArgs);
-Object* cdrFunction(ObjectStack& stack, int nArgs);
-Object* listFunction(ObjectStack& stack, int nArgs);
-Object* displayFunction(ObjectStack& stack, int nArgs);
-Object* functionBodyFunction(ObjectStack& stack, int nArgs);
-Object* functionArglistFunction(ObjectStack& stack, int nArgs);
-Object* isStringFunction(ObjectStack& stack, int nArgs);
-Object* isNumberFunction(ObjectStack& stack, int nArgs);
-Object* isConsFunction(ObjectStack& stack, int nArgs);
-Object* isBuiltinFunctionFunction(ObjectStack& stack, int nArgs);
-Object* isUserFunctionFunction(ObjectStack& stack, int nArgs);
-Object* isBoolFunction(ObjectStack& stack, int nArgs);
+Continuation* addFunction();
+Continuation* subFunction();
+Continuation* multFunction();
+Continuation* divFunction();
+Continuation* eqFunction();
+// Continuation* equalFunction();
+Continuation* equalStringFunction();
+Continuation* equalNumberFunction();
+Continuation* greaterThanFunction();
+Continuation* lesserThanFunction();
+Continuation* consFunction();
+Continuation* carFunction();
+Continuation* cdrFunction();
+Continuation* listFunction();
+Continuation* displayFunction();
+Continuation* functionBodyFunction();
+Continuation* functionArglistFunction();
+Continuation* isStringFunction();
+Continuation* isNumberFunction();
+Continuation* isConsFunction();
+Continuation* isBuiltinFunctionFunction();
+Continuation* isUserFunctionFunction();
+Continuation* isBoolFunction();
 
 // USER DEFINED FUNCTIONS
 
+}  // namespace trampoline
 }  // namespace scm
