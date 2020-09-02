@@ -1,3 +1,4 @@
+#include "operations.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -9,7 +10,6 @@
 #include <vector>
 #include "evaluate.hpp"
 #include "memory.hpp"
-#include "operations.hpp"
 #include "scheme.hpp"
 #include "trampoline.hpp"
 
@@ -433,7 +433,7 @@ Continuation* addFunction()
         return std::to_string(getIntValue(b)) + a;
       }
     };
-    std::string result = std::reduce(arguments.begin(), arguments.end(), std::string{}, lambda);
+    std::string result = std::accumulate(arguments.begin(), arguments.end(), std::string{}, lambda);
     t_RETURN(newString(result));
   }
 
@@ -447,7 +447,7 @@ Continuation* addFunction()
         return static_cast<double>(getIntValue(b) + a);
       }
     };
-    double result = std::reduce(arguments.begin(), arguments.end(), double(0.0), lambda);
+    double result = std::accumulate(arguments.begin(), arguments.end(), double(0.0), lambda);
     t_RETURN(newFloat(result));
   }
 
@@ -461,7 +461,7 @@ Continuation* addFunction()
       }
       return result;
     };
-    double result = std::reduce(arguments.begin(), arguments.end(), 0, lambda);
+    double result = std::accumulate(arguments.begin(), arguments.end(), 0, lambda);
     t_RETURN(newInteger(result));
   }
 }
@@ -497,12 +497,12 @@ Continuation* subFunction()
       }
       return a + getFloatValue(b);
     };
-    doubleSubtrahend = std::reduce(subtrahends.begin(), subtrahends.end(), double(0.0), lambda);
+    doubleSubtrahend = std::accumulate(subtrahends.begin(), subtrahends.end(), double(0.0), lambda);
     t_RETURN(newFloat(minuend - doubleSubtrahend));
   }
   else {
     auto lambda = [](int a, Object* b) { return a + getIntValue(b); };
-    intSubtrahend = std::reduce(subtrahends.begin(), subtrahends.end(), int(0), lambda);
+    intSubtrahend = std::accumulate(subtrahends.begin(), subtrahends.end(), int(0), lambda);
     t_RETURN(newInteger(static_cast<int>(minuend) - intSubtrahend));
   }
 }
@@ -528,7 +528,7 @@ Continuation* multFunction()
       }
       return a * getFloatValue(b);
     };
-    t_RETURN(newFloat(std::reduce(arguments.begin(), arguments.end(), double(1), lambda)));
+    t_RETURN(newFloat(std::accumulate(arguments.begin(), arguments.end(), double(1), lambda)));
   }
   else {
     auto lambda = [](int a, Object* b) {
@@ -539,7 +539,7 @@ Continuation* multFunction()
       }
       return a * getIntValue(b);
     };
-    t_RETURN(newInteger(std::reduce(arguments.begin(), arguments.end(), int{1}, lambda)));
+    t_RETURN(newInteger(std::accumulate(arguments.begin(), arguments.end(), int{1}, lambda)));
   }
 }
 

@@ -128,7 +128,7 @@ void set(Environment& env, Object* key, Object* value)
 void printEnv(Environment& env)
 {
   // get longest variable name for spacing purposes
-  int longestVariableNameLength = std::reduce(
+  int longestVariableNameLength = std::accumulate(
       env.bindings.begin(), env.bindings.end(), 0, [](int longestLength, Object* binding) {
         return (getStringValue(getCar(binding)).size() > longestLength)
                    ? getStringValue(getCar(binding)).size()
