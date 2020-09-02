@@ -19,6 +19,8 @@ Thus I cannot vouch for any other operating systems but I don't see why it shoul
 
 Please also note that this was my first time writing anything substantial in C++. Weird language, especially when coming from python. Nonetheless, this was quite fun but in equal measures also frustrating. Well worth it though!
 
+![CMake](https://github.com/paulfauthmayer/schemeplusplus/workflows/CMake/badge.svg)
+
 ---
 
 ## Design Philosophy
