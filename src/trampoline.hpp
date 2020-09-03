@@ -22,6 +22,7 @@ extern FunctionStack functionStack;
 // finished function
 extern Object* lastReturnValue;
 
+// forward declarations
 Object* trampoline(Continuation* startFunction);
 Continuation* tCall(Continuation* nextFunc,
                     Continuation* nextPart = NULL,
@@ -29,10 +30,6 @@ Continuation* tCall(Continuation* nextFunc,
 Continuation* tCall(Continuation* nextFunc, std::vector<ArgumentTypeVariant> arguments = {});
 Continuation* tReturn(Object* value);
 void initializeEvaluationStacks();
-template <typename T>
-T popArg();
-template <typename T>
-std::vector<T> popArgs(int n);
 void pushArg(ArgumentTypeVariant arg);
 void pushArgs(std::vector<ArgumentTypeVariant> arguments);
 Continuation* popFunc();

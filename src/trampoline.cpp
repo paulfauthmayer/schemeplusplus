@@ -23,15 +23,6 @@ std::stack<Continuation*> functionStack;
 Object* lastReturnValue = SCM_NIL;
 
 /**
- * Setup both stacks.
- */
-void initializeEvaluationStacks()
-{
-  argumentStack = std::stack<ArgumentTypeVariant>();
-  functionStack = std::stack<Continuation*>();
-}
-
-/**
  * This starts our function trampoline, which is done as a means of tail call optimization.
  * Instead of calling functinons recursively, we push them to a stack of function pointers,
  * which is then worked through one after another.
