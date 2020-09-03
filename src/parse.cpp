@@ -66,11 +66,15 @@ bool isSymbol(std::string str)
 std::vector<std::string> splitLine(std::string line)
 {
   std::vector<std::string> v;
-  // this regex does all the splitting!
   // 1st group: strings
+  std::string stringRegex = R"(\"[^\"]*\")";
   // 2nd group: symbols and numbers
+  std::string symbolsAndNumbersRegex = R"([#<>=\-\w\d\.\?\!]+)";
   // 3rd group: single character elements
-  std::regex re(R"(\"[^\"]*\"|[#<>=\-\w\d\.\?\!]+|[\'\+\/\*\%\=\(\)])");
+  std::string singleCharacterRegex = R"([\'\+\/\*\%\=\(\)])";
+  // combine all three groups into a single regular expression
+  // this regex does all the splitting!
+  std::regex re(stringRegex + "|" + symbolsAndNumbersRegex + "|" + singleCharacterRegex);
   for (std::sregex_iterator i = std::sregex_iterator(line.begin(), line.end(), re);
        i != std::sregex_iterator();
        i++) {
