@@ -153,16 +153,35 @@ Object* interpretInput(std::vector<std::string>::iterator& current)
   }
 }
 
+/**
+ * Check whether the input so far can be evaluated.
+ * @param v Container of the currently detected tokens
+ * @throw if there's an invalid order or parantheseses
+ * @returns boolean, is the input valid?
+ */
 bool canBeEvaluated(const std::vector<std::string>& v)
 {
-  /**
-   * Check whether the input so far can be evaluated.
-   * @param v Container of the currently detected tokens
-   * @returns boolean, is the input valid?
-   */
-  long openParanthesesCount{std::count(v.begin(), v.end(), "(")};
-  long closeParanthesesCount{std::count(v.begin(), v.end(), ")")};
-  return openParanthesesCount == closeParanthesesCount;
+  long openParanthesesesCount{0};
+  long closeParanthesesesCount{0};
+  // count number of opening and closing parantheseses
+  for (auto& element : v) {
+    if (element == "(") {
+      openParanthesesesCount++;
+    }
+    else if (element == ")") {
+      closeParanthesesesCount++;
+    }
+    // assure that the the parantheses are in a valid order
+    // (()) -> ok
+    // ()() -> ok
+    // )()() -> not ok!
+    if (closeParanthesesesCount > openParanthesesesCount) {
+      schemeThrow("invalid order of parantheseses!");
+    }
+  }
+  // the expression can only be evaluated if the number of opening
+  // and closing parantheseses are the same
+  return openParanthesesesCount == closeParanthesesesCount;
 }
 
 /**
