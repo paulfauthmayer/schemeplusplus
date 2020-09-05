@@ -126,7 +126,7 @@ Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag, s
 Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag, std::string helpText)
 {
   Object* obj{new Object(TAG_SYNTAX)};
-  obj->value = FuncValue{"syntax:" + name, numArgs, funcTag};
+  obj->value = FuncValue{"syntax:" + name, numArgs, funcTag, helpText};
   return obj;
 }
 
