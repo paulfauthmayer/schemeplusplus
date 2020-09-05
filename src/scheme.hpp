@@ -124,6 +124,7 @@ int getBuiltinFuncNArgs(Object* obj);
 std::string getBuiltinFuncHelpText(Object* obj);
 Object* getUserFunctionBodyList(Object* obj);
 Object* getUserFunctionArgList(Object* obj);
+std::string getBuiltinFuncHelpText(Object* obj);
 Environment* getUserFunctionParentEnv(Object* obj);
 bool hasTag(Object* obj, ObjectTypeTag tag);
 bool isString(Object* obj);

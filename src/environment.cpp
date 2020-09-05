@@ -2,12 +2,30 @@
 #include <exception>
 #include <iostream>
 #include <loguru.hpp>
+#include <map>
 #include <numeric>
 #include <vector>
 #include "memory.hpp"
 #include "scheme.hpp"
 
 namespace scm {
+
+/**
+ * Helper function to get the keys of any std::map as a vector
+ * @tparam TYPE_KEY the type of the keys
+ * @tparam TYPE_VALUE the type of the values
+ * @param inputMap the map from which to get the keys
+ * @returns a vector<TYPE_KEY> of all keys of inputMap
+ */
+template <typename TYPE_KEY, typename TYPE_VALUE>
+std::vector<TYPE_KEY> getKeys(std::map<TYPE_KEY, TYPE_VALUE> const& inputMap)
+{
+  std::vector<TYPE_KEY> keys;
+  for (auto const& element : inputMap) {
+    keys.push_back(element.first);
+  }
+  return keys;
+}
 
 /**
  * Copy constructor for the Environment class
@@ -20,38 +38,6 @@ Environment::Environment(const Environment& env)
 }
 
 /**
- * Get a binding of the given string key in the specified Environment
- * @param env the environment in which to look
- * @param key the key to look out for
- * @returns The found binding in form con(key, value) or NULL if none was found
- */
-Object* getBinding(Environment& env, std::string& key)
-{
-  Environment* currentEnv = &env;
-  while (currentEnv != NULL) {
-    auto lambda = [key](Object* binding) { return (getStringValue(getCar(binding)) == key); };
-    auto found = std::find_if(currentEnv->bindings.begin(), currentEnv->bindings.end(), lambda);
-    if (found != currentEnv->bindings.end()) {
-      return *found;
-    }
-    else {
-      currentEnv = currentEnv->parentEnv;
-    }
-  }
-  return NULL;
-}
-
-/**
- * Get a binding of the given symbol Object key in the specified Environment
- * @overload
- */
-Object* getBinding(Environment& env, Object* key)
-{
-  std::string keyStr = getStringValue(key);
-  return getBinding(env, keyStr);
-}
-
-/**
  * Get the value of a binding of a given string key in the specified Environment
  * @param env the environment in which to look
  * @param key the key to look out for
@@ -59,8 +45,17 @@ Object* getBinding(Environment& env, Object* key)
  */
 Object* getVariable(Environment& env, std::string& key)
 {
-  Object* binding{getBinding(env, key)};
-  return (binding != NULL) ? getCdr(binding) : NULL;
+  Environment* currentEnvPtr = &env;
+  while (currentEnvPtr != NULL) {
+    std::map<std::string, Object*>::iterator found = currentEnvPtr->bindings.find(key);
+    if (found != currentEnvPtr->bindings.end()) {
+      return currentEnvPtr->bindings.at(key);
+    }
+    else {
+      currentEnvPtr = currentEnvPtr->parentEnv;
+    }
+  }
+  return NULL;
 }
 
 /**
@@ -69,7 +64,10 @@ Object* getVariable(Environment& env, std::string& key)
  */
 Object* getVariable(Environment& env, Object* key)
 {
-  std::string keyStr = getStringValue(key);
+  if (!hasTag(key, TAG_SYMBOL)) {
+    schemeThrow("values can only be bound to symbols");
+  }
+  std::string keyStr{getStringValue(key)};
   return getVariable(env, keyStr);
 }
 
@@ -79,30 +77,23 @@ Object* getVariable(Environment& env, Object* key)
  * @param key the key of the binding
  * @param value the value of the binding
  */
+void define(Environment& env, std::string& key, Object* value)
+{
+  DLOG_IF_F(INFO, LOG_ENVIRONMENT, "define %s := %s", key.c_str(), toString(value).c_str());
+  env.bindings[key] = value;
+}
+
+/**
+ * Define a new binding in the given environment, takes an Object* as key.
+ * @overload
+ */
 void define(Environment& env, Object* key, Object* value)
 {
-  DLOG_IF_F(
-      INFO, LOG_ENVIRONMENT, "define %s := %s", toString(key).c_str(), toString(value).c_str());
-  auto currentDefinition = getBinding(env, key);
-  // if binding doesn't exist yet create a new one
-  if (currentDefinition == NULL) {
-    DLOG_IF_F(INFO,
-              LOG_ENVIRONMENT,
-              "define new variable %s := %s",
-              toString(key).c_str(),
-              toString(value).c_str());
-    Object* definition{newCons(key, value)};
-    env.bindings.push_back(definition);
+  if (!hasTag(key, TAG_SYMBOL)) {
+    schemeThrow("values can only be bound to symbols");
   }
-  // if binding does exist set the old value to the new value
-  else {
-    DLOG_IF_F(INFO,
-              LOG_ENVIRONMENT,
-              "redefine variable %s := %s",
-              toString(key).c_str(),
-              toString(value).c_str());
-    std::get<ConsValue>(currentDefinition->value).cdr = value;
-  }
+  std::string keyStr{getStringValue(key)};
+  define(env, keyStr, value);
 }
 
 /**
@@ -122,63 +113,59 @@ void set(Environment& env, Object* key, Object* value)
 }
 
 /**
+ * Print all bindings of an environment that fulfill a certain condition.
+ * @param env the environment from which to get the bindings
+ * @param checkFunction a function that's called on each element to determine whether it should be
+ * printed or not
+ * @param maxNameLength the longest variable name in the environment, for spacing purposes
+ */
+void printCategory(Environment& env, std::function<bool(Object*)> checkFunction, int maxNameLength)
+{
+  for (auto& binding : env.bindings) {
+    if (checkFunction(binding.second)) {
+      std::string name = binding.first;
+      std::cout << name;
+      for (int i{0}; i < maxNameLength - name.size(); i++) {
+        std::cout << ' ';
+      }
+      std::cout << " :=  ";
+      if (hasTag(binding.second, TAG_FUNC_USER)) {
+        std::cout << toString(getUserFunctionArgList(binding.second));
+      }
+      else if (isOneOf(binding.second, {TAG_FUNC_BUILTIN, TAG_SYNTAX})) {
+        std::cout << getBuiltinFuncHelpText(binding.second)
+                         .substr(0, getBuiltinFuncHelpText(binding.second).find('\n'));
+      }
+      else {
+        std::cout << toString(binding.second);
+      }
+      std::cout << "\n";
+    }
+  }
+}
+
+/**
  * Prints all bindings of a given environment in a formatted form.
  * @param env the environment to print
  */
 void printEnv(Environment& env)
 {
   // get longest variable name for spacing purposes
-  int longestVariableNameLength = std::accumulate(
-      env.bindings.begin(), env.bindings.end(), 0, [](int longestLength, Object* binding) {
-        return (getStringValue(getCar(binding)).size() > longestLength)
-                   ? getStringValue(getCar(binding)).size()
-                   : longestLength;
+  std::vector<std::string> keys{getKeys(env.bindings)};
+  int longestVariableNameLength =
+      std::accumulate(keys.begin(), keys.end(), 0, [](int longestLength, std::string& binding) {
+        return (binding.size() > longestLength) ? binding.size() : longestLength;
       });
 
   std::cout << "======== SYNTAX ========\n";
-  for (auto binding : env.bindings) {
-    if (hasTag(getCdr(binding), TAG_SYNTAX)) {
-      std::string name = getStringValue(getCar(binding));
-      std::cout << toString(getCar(binding));
-      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
-        std::cout << ' ';
-      }
-      std::cout << " :=  " << toString(getCdr(binding)) << "\n";
-    }
-  }
+  std::function<bool(Object*)> lambda = [](Object* obj) { return hasTag(obj, TAG_SYNTAX); };
+  printCategory(env, lambda, longestVariableNameLength);
   std::cout << "======== FUNCTIONS ========\n";
-  for (auto binding : env.bindings) {
-    if (hasTag(getCdr(binding), TAG_FUNC_BUILTIN)) {
-      std::string name = getStringValue(getCar(binding));
-      std::cout << toString(getCar(binding));
-      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
-        std::cout << ' ';
-      }
-      std::cout << " :=  " << toString(getCdr(binding)) << "\n";
-    }
-  }
-  for (auto binding : env.bindings) {
-    if (hasTag(getCdr(binding), TAG_FUNC_USER)) {
-      std::string name = getStringValue(getCar(binding));
-      std::cout << toString(getCar(binding));
-      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
-        std::cout << ' ';
-      }
-      std::cout << " :=  function args: " << toString(getUserFunctionArgList(getCdr(binding)))
-                << "\n";
-    }
-  }
+  lambda = [](Object* obj) { return isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_FUNC_USER}); };
+  printCategory(env, lambda, longestVariableNameLength);
   std::cout << "======== VARIABLES ========\n";
-  for (auto binding : env.bindings) {
-    if (!isOneOf(getCdr(binding), {TAG_FUNC_BUILTIN, TAG_FUNC_USER, TAG_SYNTAX})) {
-      std::string name = getStringValue(getCar(binding));
-      std::cout << toString(getCar(binding));
-      for (int i{0}; i < longestVariableNameLength - name.size(); i++) {
-        std::cout << ' ';
-      }
-      std::cout << " := " << toString(getCdr(binding)) << "\n";
-    }
-  }
+  lambda = [](Object* obj) { return !isOneOf(obj, {TAG_FUNC_BUILTIN, TAG_FUNC_USER, TAG_SYNTAX}); };
+  printCategory(env, lambda, longestVariableNameLength);
   std::cout << "===========================\n";
 }
 }  // namespace scm

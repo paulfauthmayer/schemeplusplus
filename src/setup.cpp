@@ -1,5 +1,6 @@
 #include "setup.hpp"
 #include <iostream>
+#include <loguru.hpp>
 #include "environment.hpp"
 #include "memory.hpp"
 #include "scheme.hpp"
@@ -21,7 +22,7 @@ void defineNewSyntax(Environment& env,
                      std::string helpText)
 {
   Object* func{newSyntax(name, nArgs, tag, helpText)};
-  define(env, newSymbol(name), func);
+  define(env, name, func);
 }
 
 /**
@@ -39,7 +40,7 @@ void defineNewBuiltinFunction(Environment& env,
                               std::string helpText)
 {
   Object* func{newBuiltinFunction(name, nArgs, tag, helpText)};
-  define(env, newSymbol(name), func);
+  define(env, name, func);
 }
 
 /**
