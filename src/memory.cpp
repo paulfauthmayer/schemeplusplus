@@ -1,5 +1,6 @@
 #include "memory.hpp"
 #include <loguru.hpp>
+#include "garbage_collection.hpp"
 #include "scheme.hpp"
 
 namespace scm {
@@ -32,6 +33,8 @@ void initializeSingletons()
 Object* newSingleton(ObjectTypeTag type)
 {
   Object* obj{new Object(type)};
+  // singletons should never be deleted!
+  obj->essential = true;
   return obj;
 }
 
@@ -110,6 +113,8 @@ Object* newBuiltinFunction(std::string name, int numArgs, FunctionTag funcTag, s
 {
   Object* obj{new Object(TAG_FUNC_BUILTIN)};
   obj->value = FuncValue{"primitive:" + name, numArgs, funcTag, helpText};
+  // builtin functions should never be deleted!
+  obj->essential = true;
   return obj;
 };
 
@@ -127,6 +132,8 @@ Object* newSyntax(std::string name, int numArgs, FunctionTag funcTag, std::strin
 {
   Object* obj{new Object(TAG_SYNTAX)};
   obj->value = FuncValue{"syntax:" + name, numArgs, funcTag, helpText};
+  // builtin syntax should never be deleted!
+  obj->essential = true;
   return obj;
 }
 

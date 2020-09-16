@@ -306,7 +306,8 @@ static Continuation* ifSyntax_Part1()
       break;
     }
     default: {
-      schemeThrow("evaluation not yet implemented for " + toString(evaluatedCondition));
+      schemeThrow("evaluation not yet implemented for " + toString(evaluatedCondition) +
+                  " with tag " + tagToString(evaluatedCondition->tag));
       break;
     }
   }

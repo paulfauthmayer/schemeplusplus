@@ -36,7 +36,7 @@ double getFloatValue(Object* obj)
 ConsValue getCons(Object* obj)
 {
   if (!hasTag(obj, TAG_CONS)) {
-    schemeThrow("tried to get consvalue from non-cons object");
+    schemeThrow("tried to get consvalue from non-cons object: " + toString(obj));
   }
   return std::get<ConsValue>(obj->value);
 }
@@ -144,8 +144,53 @@ bool LOG_PARSER = 0;
 bool LOG_STACK_TRACE = 0;
 bool LOG_TESTS = 1;
 bool LOG_TRAMPOLINE_TRACE = 0;
+bool LOG_GARBAGE_COLLECTION = 0;
 
 // other helper functions
+
+std::string tagToString(ObjectTypeTag tag)
+{
+  switch (tag) {
+    case TAG_INT:
+      return "integer";
+      break;
+    case TAG_FLOAT:
+      return "float";
+      break;
+    case TAG_STRING:
+      return "string";
+      break;
+    case TAG_SYMBOL:
+      return "symbol";
+      break;
+    case TAG_CONS:
+      return "cons";
+      break;
+    case TAG_NIL:
+      return "cons";
+      break;
+    case TAG_TRUE:
+      return "true";
+      break;
+    case TAG_FALSE:
+      return "false";
+      break;
+    case TAG_FUNC_BUILTIN:
+      return "builtin function";
+      break;
+    case TAG_FUNC_USER:
+      return "user function";
+      break;
+    case TAG_SYNTAX:
+      return "syntax";
+      break;
+    case TAG_VOID:
+      return "void";
+      break;
+    default:
+      return "unrecognized name";
+  };
+}
 
 static std::string consToString(scm::Object* cons, std::string& str)
 {

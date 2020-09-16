@@ -24,6 +24,7 @@ add_executable(scheme
   src/test.cpp
   src/repl.cpp
   src/setup.cpp
+  src/garbage_collection.cpp
   include/loguru.cpp
   )
 

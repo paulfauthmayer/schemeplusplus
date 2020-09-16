@@ -217,6 +217,7 @@ Object* readInput(std::istream* streamPtr, bool isFile)
 
     // remove comments, as they shouldn't be interpreted
     line = line.substr(0, line.find(';'));
+    DLOG_IF_F(INFO, LOG_PARSER, "read line: %s", line.c_str());
 
     // split the read line into lexical elements and store them
     std::vector<std::string> split = splitLine(line);

@@ -3,6 +3,7 @@
 #include <loguru.hpp>
 #include "environment.hpp"
 #include "evaluate.hpp"
+#include "garbage_collection.hpp"
 #include "memory.hpp"
 #include "parse.hpp"
 #include "scheme.hpp"
@@ -55,6 +56,9 @@ void repl(scm::Environment& env, std::istream* streamPtr, bool isFile)
       if (!isFile) {
         std::cout << '\n';
       }
+
+      // collect garbage if necessary
+      markAndSweep(env);
     }
     catch (scm::schemeException& e) {
       std::cerr << e.what() << '\n';
@@ -120,9 +124,11 @@ void printWelcome()
   std::stringstream ss(lambdaGraphics);
   std::string token;
   std::cout << "\n\n";
+  std::cout << loguru::terminal_bold() << loguru::terminal_green();
   while (std::getline(ss, token, '\n')) {
     printCentered(token);
   }
+  std::cout << loguru::terminal_reset();
   std::cout << "\n\n";
   printCentered("Welcome to Scheme++");
   printCentered("Version 1.0.0");

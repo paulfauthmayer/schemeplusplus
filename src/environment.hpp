@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+// #include "garbage_collection.hpp"
 #include "scheme.hpp"
 
 namespace scm {
@@ -27,6 +28,8 @@ class Environment {
   friend void printEnv(Environment& env);
   friend Object* getVariable(Environment& env, Object* key);
   friend Object* getVariable(Environment& env, std::string& key);
+  // garbage collection
+  friend void mark(Environment& env);
 };
 
 void define(Environment& env, Object* key, Object* value);

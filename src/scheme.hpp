@@ -6,6 +6,7 @@
 #include <stack>
 #include <string>
 #include <variant>
+#include "garbage_collection.hpp"
 
 namespace scm {
 
@@ -18,7 +19,6 @@ enum ObjectTypeTag {
   TAG_NIL,
   TAG_TRUE,
   TAG_FALSE,
-  TAG_ENV,
   TAG_FUNC_BUILTIN,
   TAG_FUNC_USER,
   TAG_SYNTAX,
@@ -78,10 +78,11 @@ struct UserFuncValue {
   Environment* env;
 };
 
-struct Object {
+struct Object : public Collectable {
   ObjectTypeTag tag;
   std::variant<int, double, std::string, ConsValue, FuncValue, UserFuncValue> value;
   Object(ObjectTypeTag tag) : tag(tag){};
+  ~Object(){};
 };
 
 class schemeException : public std::runtime_error {
@@ -131,6 +132,7 @@ bool isString(Object* obj);
 bool isNumeric(Object* obj);
 bool isFloatingPoint(Object* obj);
 bool isOneOf(Object* obj, std::vector<ObjectTypeTag> validTypes);
+std::string tagToString(ObjectTypeTag tag);
 std::string toString(scm::Object* obj);
 static std::string consToString(scm::Object* cons, std::string& str);
 std::string prettifyUserFunction(Object* func);
@@ -153,6 +155,7 @@ using ObjectStack = std::stack<Object*>;
 using FunctionStack = std::stack<Continuation*>;
 
 // logging activation
+extern bool LOG_GARBAGE_COLLECTION;
 extern bool LOG_TRAMPOLINE_TRACE;
 extern bool LOG_STACK_TRACE;
 extern bool LOG_PARSER;
