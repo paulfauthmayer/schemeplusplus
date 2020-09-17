@@ -6,7 +6,7 @@
 
 The build process should be relatively straight foreward, thanks to the included CMake instructions.
 I used a Macbook running macOS Catalina 10.15.6 during the development of this interpreter.
-Thus I cannot vouch for any other operating systems but I don't see why it shouldn't work :)
+A github action was used to build on ubuntu 20.04 which you can see below. Windows wasn't tested but should hopefully work as well.
 
 ```bash
 > cd <repo>
@@ -16,6 +16,8 @@ Thus I cannot vouch for any other operating systems but I don't see why it shoul
 > make
 > ./scheme
 ```
+
+If you'd like to be able to see more debug messages, build the interpreter with the following command instead: `cmake -DCMAKE_BUILD_TYPE=Debug ..`. You can enable or disable individual log message categories in `scheme.cpp`.
 
 Please also note that this was my first time writing anything substantial in C++. Weird language, especially when coming from python. Nonetheless, this was quite fun but in equal measures also frustrating. Well worth it though!
 
@@ -81,24 +83,26 @@ Please also note that this was my first time writing anything substantial in C++
   
 * run `.scm` files on their own by passing it via the cli! `scheme myscript.scm`
 * type `exit!` to close repl
+* enter a newline 3 times in a row to skip the current repl
 * type `help` to show all currently available functions and variables
 
   ``` scheme
-  > help
+  λ help
   ======== SYNTAX ========
-  quote            :=  #<syntax:quote>
-  if               :=  #<syntax:if>
-  define           :=  #<syntax:define>
-  set!             :=  #<syntax:set!>
-  lambda           :=  #<syntax:lambda>
-  begin            :=  #<syntax:begin>
-  help             :=  #<syntax:help>
-  def              :=  #<syntax:define>
+  begin            :=  evaluate multiple expressions and return last result
+  def              :=  defines a value to the given variable name
+  define           :=  defines a value to the given variable name
+  help             :=  show help text for a given element
+  if               :=  returns the first expression if the condition is true, the second otherwise:
+  lambda           :=  defines a new function
+  quote            :=  returns the first argument:
+  set!             :=  defines a value to the given variable name in all environments
   ======== FUNCTIONS ========
-  +                :=  #<primitive:+>
-  -                :=  #<primitive:->
-  *                :=  #<primitive:*>
-  /                :=  #<primitive:/>
+  %                :=  ( num denum )
+  *                :=  multiplies all arguments with each other
+  +                :=  adds multiple numbers and/or strings
+  -                :=  subtracts the sum of multiple numbers from the first argument
+  /                :=  divides the first argument by the product of all other arguments>
                   ....
   ```
 
@@ -106,6 +110,7 @@ Please also note that this was my first time writing anything substantial in C++
 
     ``` scheme
     > (help +)
+    ======== + ========
     adds multiple numbers and/or strings
       (+ 1 2 3) -> 6
       (+ 1 2 2.5) -> 5.5
@@ -114,13 +119,35 @@ Please also note that this was my first time writing anything substantial in C++
     priority: string > float > integer
     ```
 
+    in case of a user defined function, the help message is replaced with the function implementation
+
+    ```scheme
+    λ (help %)
+  ======== % ========
+  (lambda 
+    ( num denum ) 
+    ( 
+      ( define 
+        ( helper num denum count ) 
+        ( if 
+          ( < num denum ) num 
+          ( helper 
+            ( - num denum ) denum 
+            ( + count 1 ) ) ) ) 
+      ( if 
+        ( = denum 0 ) nil 
+        ( helper num denum 0 ) ) ))
+    ```
+
+* garbage collection using a mark and sweep algorithm (note: currently broken and the actual deleting is deactivated, is currently being worked on)
+
 ### Data Types
 
 * numbers (integers & floats)
 * strings
 * lists / cons
 * booleans
-* nil '()
+* other singletons (nil '(), EOF, ...)
 * user defined functions
 
 ### Supported Syntax
@@ -184,7 +211,7 @@ Please also note that this was my first time writing anything substantial in C++
 
 * code optimisation
 * garbage collection
-* full unit test coverage
+* full test coverage
 
 ---
 

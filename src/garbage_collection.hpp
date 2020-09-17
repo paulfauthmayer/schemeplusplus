@@ -23,7 +23,6 @@ class Collectable {
   virtual ~Collectable();
 };
 
-static std::vector<Collectable*> ObjectHeap;
 void markAndSweep(Environment& env);
 void mark(Environment& env);
 

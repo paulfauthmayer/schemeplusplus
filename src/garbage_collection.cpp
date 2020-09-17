@@ -11,7 +11,7 @@ namespace scm {
 static int totalObjectCount{0};
 
 // keep track of all existing objects
-// std::vector<Collectable*> ObjectHeap;
+std::vector<Collectable*> ObjectHeap;
 
 // constructor and destructor for Collectable class
 Collectable::Collectable() : marked(false)

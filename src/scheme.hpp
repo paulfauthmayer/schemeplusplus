@@ -10,6 +10,9 @@
 
 namespace scm {
 
+/**
+ * The types our objects can be
+ */
 enum ObjectTypeTag {
   TAG_INT = 1,
   TAG_FLOAT,
@@ -26,6 +29,9 @@ enum ObjectTypeTag {
   TAG_EOF,
 };
 
+/**
+ * Identifies the individual builtin functions and syntax
+ */
 enum FunctionTag {
   SYNTAX_QUOTE,
   SYNTAX_LAMBDA,
@@ -59,32 +65,44 @@ enum FunctionTag {
   FUNC_IS_BOOL,
 };
 
+// forward declarations required for Object Class
 struct Object;
+class Environment;
+
+// a Cons consists of at least one element and element after that
 struct ConsValue {
   Object* car;
   Object* cdr;
 };
+// the value of a builtin function or syntax
 struct FuncValue {
   std::string name;
   int nArgs;
   FunctionTag funcTag;
   std::string helpText;
 };
-
-class Environment;  // forward definition for environment.hpp
+// the value of a user defined function
 struct UserFuncValue {
   Object* argList;
   Object* bodyList;
   Environment* env;
 };
 
+/**
+ * The base class of every scheme object we use.
+ * Central point of this interpreter
+ */
 struct Object : public Collectable {
   ObjectTypeTag tag;
+  // can hold multiple different values
   std::variant<int, double, std::string, ConsValue, FuncValue, UserFuncValue> value;
   Object(ObjectTypeTag tag) : tag(tag){};
   ~Object(){};
 };
 
+/**
+ * A custom exception thrown when something goes wrong with our interpreter.
+ */
 class schemeException : public std::runtime_error {
  private:
   std::string m_error;
@@ -109,6 +127,8 @@ class schemeException : public std::runtime_error {
   ~schemeException() throw() {}
   const char* what() const throw() { return m_error.c_str(); }
 };
+
+// a macro to also print the line and file of where the exception was thrown
 #define schemeThrow(arg) throw schemeException(arg, __FILE__, __LINE__);
 
 // Forward Declarations
@@ -140,6 +160,7 @@ std::string prettifyUserFunction(Object* func);
 // Macros and Typedefs
 
 // what this is supposed to do: *function -> *function
+// this is used in our trampoline (see evaluation.cpp)
 // VoidoPtrFunc is a function returning a void pointer
 using VoidPtrFunc = void*();
 // Continuation is a function returning a pointer to a function
